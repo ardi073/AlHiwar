@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Al-Hiwar | Platform Belajar Bahasa Arab - Indonesia</title>
+  <meta name="description" content="Platform edukasi interaktif belajar percakapan Bahasa Arab - Indonesia dengan Tutor AI, Nahwu Shorof, Kuis Interaktif, dan Kamus 1000+ kata.">
+  <meta name="theme-color" content="#0b6b55">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Al-Hiwar">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  
+  <!-- Google Fonts: Cairo for Arabic, Outfit for Latin -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="styles.css?v=4">
+  
+  <!-- Boxicons for modern icons -->
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+</head>
+<body>
+  
+  <!-- Background Decorative Blurs -->
+  <div class="bg-blur bg-blur-1"></div>
+  <div class="bg-blur bg-blur-2"></div>
+  
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i class="bx bx-book-open"></i>
+        </div>
+        <div class="logo-text">
+          <h1>Al-Hiwar <span class="arabic-logo">الحِوَار</span></h1>
+          <p>Platform Belajar Bahasa Arab</p>
+        </div>
+      </div>
+      
+      <!-- User Progress & Theme Toggle -->
+      <div class="header-actions">
+        <div class="progress-widget" id="progressWidget">
+          <span class="progress-label">Progres: <strong id="progressPercent">0%</strong></span>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
+          </div>
+        </div>
+        
+        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Ganti Tema">
+          <i class="bx bx-moon" id="themeToggleIcon"></i>
+        </button>
+      </div>
+    </header>
+    
+    <!-- Navigation Tabs -->
+    <nav class="app-nav" id="appNavbar">
+      <button class="nav-item active" id="navDashboardBtn" data-tab="dashboard">
+        <i class="bx bx-home-alt"></i>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-item" id="navLearnBtn" data-tab="learn">
+        <i class="bx bx-conversation"></i>
+        <span>Percakapan</span>
+      </button>
+      <button class="nav-item" id="navFlashcardBtn" data-tab="flashcard">
+        <i class="bx bx-carousel"></i>
+        <span>Kosakata</span>
+      </button>
+      <button class="nav-item" id="navQuizBtn" data-tab="quiz">
+        <i class="bx bx-brain"></i>
+        <span>Kuis</span>
+      </button>
+      <button class="nav-item" id="navDictionaryBtn" data-tab="dictionary">
+        <i class="bx bx-search-alt"></i>
+        <span>Kamus</span>
+      </button>
+      <button class="nav-item" id="navNahwuBtn" data-tab="nahwu">
+        <i class="bx bx-edit"></i>
+        <span>Nahwu Shorof</span>
+      </button>
+      <button class="nav-item" id="navAiBtn" data-tab="ai">
+        <i class="bx bx-bot"></i>
+        <span>Tutor AI</span>
+      </button>
+    </nav>
+    
+    <!-- Main Content Area -->
+    <main class="app-main" id="mainContent">
+      <!-- Dynamic Views will be injected here by app.js -->
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Memuat materi pembelajaran...</p>
+      </div>
+    </main>
+  </div>
+  
+  <!-- Toast Notifications -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confettiCanvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999;"></canvas>
+
+  <!-- Premium Paywall Modal -->
+  <div class="premium-modal-overlay" id="premiumModalOverlay" style="display: none;">
+    <div class="premium-modal" id="premiumModal"></div>
+  </div>
+
+  <!-- Data Files (loaded before app.js) -->
+  <script src="data/data-loader.js?v=4"></script>
+  <script src="data/theme-taaruf.js?v=4"></script>
+  <script src="data/theme-matham.js?v=4"></script>
+  <script src="data/theme-madrasah.js?v=4"></script>
+  <script src="data/theme-suq.js?v=4"></script>
+  <script src="data/theme-usrah.js?v=4"></script>
+  <script src="data/theme-mathar.js?v=4"></script>
+  <script src="data/theme-hiwayah.js?v=4"></script>
+  <script src="data/theme-mustasyfa.js?v=4"></script>
+  <script src="data/dictionary.js?v=4"></script>
+  <script src="data/nahwu.js?v=4"></script>
+  
+  <!-- Main App Logic -->
+  <script src="app.js?v=4"></script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('[PWA] Service Worker registered:', reg.scope))
+          .catch(err => console.warn('[PWA] Service Worker registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
