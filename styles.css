@@ -2,7 +2,7 @@
 :root {
   /* Fonts */
   --font-latin: 'Outfit', sans-serif;
-  --font-arabic: 'Cairo', sans-serif;
+  --font-arabic: 'Amiri', serif;
 
   /* Light Theme Colors (Default) */
   --bg-primary: #f3f7f6;
@@ -590,9 +590,9 @@ body.dark-theme .theme-card {
 
 .arabic-text {
   font-family: var(--font-arabic);
-  font-size: 22px;
+  font-size: 26px; /* Increased for Amiri readability */
   font-weight: 600;
-  line-height: 1.6;
+  line-height: 1.8; /* Increased to prevent harakat clipping */
   direction: rtl;
   text-align: right;
   margin-bottom: 8px;
@@ -1195,7 +1195,7 @@ body.dark-theme .dialogue-footer {
 }
 
 .chat-msg .arabic-text {
-  font-size: 20px;
+  font-size: 24px;
   margin-bottom: 4px;
 }
 
@@ -1993,8 +1993,9 @@ body.dark-theme .locked-content::after {
 
 /* Make text tighter in chat history since it's 30% */
 .ai-chat-area .arabic-text {
-  font-size: 18px;
+  font-size: 22px;
   margin-bottom: 4px;
+  line-height: 1.8;
 }
 .ai-chat-area .latin-text, .ai-chat-area .translation-text {
   font-size: 12px;
