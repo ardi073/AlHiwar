@@ -2256,4 +2256,28 @@ body.dark-theme .locked-content::after {
   .ai-chat-area .chat-msg {
     max-width: 95%;
   }
+  
+  /* Fix speech bubble covering face on mobile */
+  .ai-speech-bubble {
+    top: auto !important;
+    bottom: 10px !important;
+    right: 5% !important;
+    left: 5% !important;
+    max-width: 90% !important;
+    font-size: 16px !important;
+    padding: 10px !important;
+    border-radius: 15px !important;
+    text-align: center !important;
+  }
+  .ai-speech-bubble::after {
+    display: none !important;
+  }
+  .floating-config-btn {
+    top: 10px !important;
+    left: 10px !important;
+    width: 35px !important;
+    height: 35px !important;
+    font-size: 18px !important;
+    z-index: 5 !important;
+  }
 }
