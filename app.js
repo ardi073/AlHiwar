@@ -116,21 +116,38 @@ function speakArabic(text, onStart = null, onEnd = null) {
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "ar-SA";
-    utterance.rate = 0.85; // agak lambat agar mudah dipelajari
-    utterance.pitch = 1.0;
-
+    utterance.rate = 0.80; // Diperlambat sedikit agar terdengar lebih luwes (seperti Ustadz)
+    
     const voices = window.speechSynthesis.getVoices();
-    const arVoice = voices.find(voice => voice.lang.startsWith("ar") || voice.lang.startsWith("AR"));
+    
+    // 1. Prioritaskan suara laki-laki Arab yang dikenal (Mac/iOS: Maged, Tarik | Windows: Naayf)
+    let arVoice = voices.find(voice => 
+      (voice.lang.startsWith("ar") || voice.lang.startsWith("AR")) && 
+      (voice.name.includes("Maged") || voice.name.includes("Tarik") || voice.name.includes("Naayf") || voice.name.toLowerCase().includes("male"))
+    );
+
+    // 2. Jika tidak ada suara laki-laki, ambil suara Arab apa saja (biasanya Google TTS Female di Android)
+    if (!arVoice) {
+      arVoice = voices.find(voice => voice.lang.startsWith("ar") || voice.lang.startsWith("AR"));
+    }
 
     if (arVoice) {
       utterance.voice = arVoice;
+      
+      // Jika suara yang terpilih BUKAN suara laki-laki asli (kemungkinan suara wanita), 
+      // kita turunkan nadanya (pitch) agar terdengar lebih berat seperti laki-laki.
+      if (!arVoice.name.match(/Maged|Tarik|Naayf|male/i)) {
+        utterance.pitch = 0.65; // Nada berat (palsu laki-laki)
+      } else {
+        utterance.pitch = 0.95; // Nada asli laki-laki
+      }
     } else if (voices.length > 0) {
-      // Ada suara lain di browser tapi tidak ada suara bahasa Arab
-      console.warn("Suara Bahasa Arab (ar-SA) tidak terdeteksi. Mencoba default browser...");
-      showToast("Suara Bahasa Arab tidak ditemukan di sistem Anda. Browser akan mencoba memutar default.", "warning");
+      console.warn("Suara Bahasa Arab (ar-SA) tidak terdeteksi.");
+      showToast("Suara Arab tidak ditemukan di sistem. Mencoba default browser.", "warning");
+      utterance.pitch = 0.8;
     } else {
-      // Browser belum memuat daftar suara sama sekali
       console.warn("Daftar suara browser kosong. Mencoba memutar...");
+      utterance.pitch = 0.8;
     }
 
     utterance.onstart = () => {
