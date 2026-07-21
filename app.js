@@ -109,7 +109,53 @@ function toggleTheme() {
 }
 
 // --- AUDIO UTILITIES (TTS) ---
-function speakArabic(text, onStart = null, onEnd = null) {
+let currentAudio = null;
+
+async function speakArabic(text, onStart = null, onEnd = null) {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+
+  try {
+    if (onStart) onStart(); // Memicu animasi UI
+    const response = await fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+
+    if (!response.ok) {
+      console.warn("ElevenLabs TTS gagal (mungkin kuota habis), kembali menggunakan suara sistem...");
+      fallbackSpeakArabic(text, null, onEnd); // onStart sudah dipanggil
+      return;
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    currentAudio = new Audio(url);
+    
+    currentAudio.onended = () => {
+      if (onEnd) onEnd();
+      URL.revokeObjectURL(url);
+    };
+    currentAudio.onerror = () => {
+      console.warn("Gagal memutar audio MP3, kembali menggunakan suara sistem...");
+      fallbackSpeakArabic(text, null, onEnd);
+    };
+    
+    currentAudio.play().catch(err => {
+      console.warn("Pemutaran otomatis diblokir browser:", err);
+      fallbackSpeakArabic(text, null, onEnd);
+    });
+
+  } catch (err) {
+    console.error("Koneksi ke backend TTS gagal:", err);
+    fallbackSpeakArabic(text, null, onEnd);
+  }
+}
+
+function fallbackSpeakArabic(text, onStart = null, onEnd = null) {
   if ("speechSynthesis" in window) {
     // Batal suara yang sedang berjalan
     window.speechSynthesis.cancel();
