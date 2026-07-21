@@ -1562,35 +1562,25 @@ function parseGeminiResponse(text) {
   let latin = "";
   let id = "";
   
-  // Find lines starting with [ or containing brackets
   lines.forEach(line => {
     if (line.startsWith("[") && line.endsWith("]")) {
       const clean = line.slice(1, -1);
-      // Determine if it is Latin (contains a-z) or Indonesian translation
-      if (/[a-zA-Z]/.test(clean) && !clean.includes(" ") && clean.length < 20 || clean.toLowerCase().includes("kaifa") || clean.toLowerCase().includes("ismi") || clean.toLowerCase().includes("ana") || clean.toLowerCase().includes("marhaban") || !/[a-zA-Z\s]{12,}/.test(clean) || clean.includes("'") || clean.includes("-")) {
-        // Simple heuristic: if it looks like phonetic reading (usually words with letters or specific patterns)
-        // Let's refine: actually the first bracket line is usually latin, the second is translation.
-        if (!latin) {
-          latin = clean;
-        } else {
-          id = clean;
-        }
+      if (/[a-zA-Z]/.test(clean) && (!clean.includes(" ") || clean.split(" ").length < 6 || clean.toLowerCase().includes("kaifa") || clean.toLowerCase().includes("ismi") || clean.toLowerCase().includes("ana") || clean.toLowerCase().includes("marhaban"))) {
+        if (!latin) latin = clean;
+        else id += (id ? "\n" : "") + clean;
       } else {
-        if (!latin) {
-          latin = clean;
-        } else {
-          id = clean;
-        }
+        id += (id ? "\n" : "") + clean;
       }
     } else if (line.startsWith("(") && line.endsWith(")")) {
-      // It is a correction
-      id += `\n*Koreksi: ${line.slice(1, -1)}*`;
+      id += (id ? "\n" : "") + `*Koreksi: ${line.slice(1, -1)}*`;
     } else {
-      // It is Arabic text
-      if (!ar) {
-        ar = line;
+      // Use regex to detect Arabic characters
+      const isArabic = /[\u0600-\u06FF]/.test(line);
+      if (isArabic) {
+        ar += (ar ? " " : "") + line;
       } else {
-        ar += " " + line;
+        // If it's not Arabic and no brackets, it's an Indonesian note/correction
+        id += (id ? "\n\n" : "") + `*Catatan:* ${line}`;
       }
     }
   });
