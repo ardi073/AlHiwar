@@ -15,7 +15,7 @@ let appState = {
   currentQuizScore: 0,
   aiScenario: "general",
   aiChatHistory: JSON.parse(localStorage.getItem("aiChatHistory")) || [],
-  aiModel: localStorage.getItem("aiModel") || "gemini-3.5-flash-lite",
+  aiModel: (localStorage.getItem("aiModel") && !localStorage.getItem("aiModel").includes("1.5")) ? localStorage.getItem("aiModel") : "gemini-3.5-flash-lite",
   aiModelList: JSON.parse(localStorage.getItem("aiModelList")) || [],
   favoriteWords: JSON.parse(localStorage.getItem("favoriteWords")) || [],
   dailyStreak: parseInt(localStorage.getItem("dailyStreak")) || 0,
