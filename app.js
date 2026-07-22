@@ -40,11 +40,17 @@ function showPremiumPaywall() {
   const modal = document.getElementById("premiumModal");
 
   modal.innerHTML = `
-    <i class="bx bxs-crown premium-icon"></i>
-    <h2>Akses Premium Diperlukan</h2>
-    <p>Tema ini terkunci untuk pengguna gratis. Tingkatkan (Upgrade) ke Premium sekarang untuk mengakses <b>100% semua tema, kuis ekstra, dan kamus tak terbatas</b> secara offline & online!</p>
-    <button class="premium-btn" id="upgradePremiumBtn">Tingkatkan ke Premium (Rp 49.000/bln)</button>
-    <button class="premium-close" id="closePremiumBtn">Mungkin Nanti</button>
+    <i class="bx bxs-lock-alt premium-icon" style="color: var(--primary-color);"></i>
+    <h2>Akses Dibatasi</h2>
+    <p>Tema ini khusus untuk pengguna Premium. Jika Anda telah berlangganan di website kami, silakan masuk (Login) menggunakan akun Anda.</p>
+    
+    <div style="display: flex; flex-direction: column; gap: 10px; margin: 15px 0;">
+      <input type="email" id="loginEmail" placeholder="Email Terdaftar" style="padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); outline: none;">
+      <input type="password" id="loginPassword" placeholder="Kata Sandi" style="padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); outline: none;">
+    </div>
+
+    <button class="premium-btn" id="loginSubmitBtn">Masuk (Login)</button>
+    <button class="premium-close" id="closePremiumBtn">Kembali ke Beranda</button>
   `;
 
   overlay.style.display = "flex";
@@ -53,13 +59,26 @@ function showPremiumPaywall() {
     overlay.style.display = "none";
   };
 
-  document.getElementById("upgradePremiumBtn").onclick = () => {
-    // Simulasi pembelian berhasil
-    appState.isPremium = true;
-    localStorage.setItem("isPremium", "true");
-    overlay.style.display = "none";
-    showToast("Terima kasih! Anda sekarang pengguna Premium.", "success");
-    renderActiveTab(); // Refresh view
+  document.getElementById("loginSubmitBtn").onclick = () => {
+    const email = document.getElementById("loginEmail").value;
+    const pass = document.getElementById("loginPassword").value;
+    
+    if (email.includes("@") && pass.length > 3) {
+      // TODO: Hubungkan ke Supabase Database
+      appState.isPremium = true;
+      localStorage.setItem("isPremium", "true");
+      overlay.style.display = "none";
+      showToast("Login Berhasil! Akses Premium Terbuka.", "success");
+      
+      // Auto reload AI View to show the locked scenario
+      if (appState.activeTab === "ai") {
+        renderAiView();
+      } else {
+        renderActiveTab();
+      }
+    } else {
+      showToast("Email atau Kata Sandi salah.", "error");
+    }
   };
 }
 
@@ -1011,10 +1030,23 @@ function renderAiView() {
   avatarArea.className = "ai-avatar-area";
   avatarArea.innerHTML = `
     <div style="position: absolute; top: 15px; left: 15px; z-index: 5; display: flex; gap: 8px; align-items: center;">
-      <select id="inlineScenarioSelect" style="padding: 8px 12px; border-radius: 20px; border: 1px solid var(--card-border); background: var(--glass-bg); backdrop-filter: blur(8px); font-family: var(--font-primary); font-size: 13px; font-weight: 600; color: var(--text-secondary); outline: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-        <option value="taaruf" ${appState.aiScenario === 'taaruf' ? 'selected' : ''}>Perkenalan (Gratis)</option>
-        <option value="matham" ${appState.aiScenario === 'matham' ? 'selected' : ''}>Di Restoran (Gratis)</option>
-        <option value="general" ${appState.aiScenario === 'general' ? 'selected' : ''}>Bebas (Premium)</option>
+      <select id="inlineScenarioSelect" style="padding: 8px 12px; border-radius: 20px; border: 1px solid var(--card-border); background: var(--glass-bg); backdrop-filter: blur(8px); font-family: var(--font-primary); font-size: 13px; font-weight: 600; color: var(--text-secondary); outline: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05); max-width: 200px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+        <optgroup label="Gratis (Trial)">
+          <option value="taaruf" ${appState.aiScenario === 'taaruf' ? 'selected' : ''}>Perkenalan</option>
+          <option value="matham" ${appState.aiScenario === 'matham' ? 'selected' : ''}>Di Restoran</option>
+          <option value="madrasah" ${appState.aiScenario === 'madrasah' ? 'selected' : ''}>Di Sekolah</option>
+        </optgroup>
+        <optgroup label="Premium (SaaS)">
+          <option value="suq" ${appState.aiScenario === 'suq' ? 'selected' : ''}>Di Pasar (Premium)</option>
+          <option value="usrah" ${appState.aiScenario === 'usrah' ? 'selected' : ''}>Keluarga (Premium)</option>
+          <option value="mathar" ${appState.aiScenario === 'mathar' ? 'selected' : ''}>Di Bandara (Premium)</option>
+          <option value="hiwayah" ${appState.aiScenario === 'hiwayah' ? 'selected' : ''}>Hobi (Premium)</option>
+          <option value="mustasyfa" ${appState.aiScenario === 'mustasyfa' ? 'selected' : ''}>Rumah Sakit (Premium)</option>
+          <option value="mihnah" ${appState.aiScenario === 'mihnah' ? 'selected' : ''}>Pekerjaan (Premium)</option>
+          <option value="fushul" ${appState.aiScenario === 'fushul' ? 'selected' : ''}>Cuaca & Musim (Premium)</option>
+          <option value="uthlah" ${appState.aiScenario === 'uthlah' ? 'selected' : ''}>Liburan (Premium)</option>
+          <option value="riyadhah" ${appState.aiScenario === 'riyadhah' ? 'selected' : ''}>Olahraga (Premium)</option>
+        </optgroup>
       </select>
       <button id="inlineClearChatBtn" title="Hapus Riwayat Chat" style="width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--card-border); background: var(--glass-bg); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--error);">
         <i class="bx bx-trash"></i>
@@ -1031,11 +1063,15 @@ function renderAiView() {
     <div class="typing-indicator" id="aiTypingIndicator" style="display: none; padding-left: 20px; padding-bottom: 10px;">
       <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
     </div>
-    <div class="chat-input-bar">
-      <button class="icon-btn" id="voiceInputBtn" title="Suara"><i class="bx bx-microphone"></i></button>
-      <input type="text" class="chat-input" id="chatInputField" placeholder="Ketik balasan (Bahasa Arab)...">
-      <button class="icon-btn" style="background: linear-gradient(135deg, var(--primary-color), var(--primary-light)); color: white; border: none;" id="sendChatBtn">
-        <i class="bx bx-send"></i>
+    <div class="chat-input-bar" style="justify-content: center; padding: 15px; gap: 15px; border-top: 1px solid var(--glass-border); background: var(--card-bg);">
+      <input type="hidden" id="chatInputField">
+      <button class="voice-chat-btn" id="voiceInputIdBtn" style="flex: 1; padding: 15px; border-radius: 15px; border: 1px solid #ddd; background: #f8f9fa; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s;">
+        <i class="bx bx-microphone" style="font-size: 28px; color: #E74C3C;"></i>
+        <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Bicara (Indo)</span>
+      </button>
+      <button class="voice-chat-btn" id="voiceInputArBtn" style="flex: 1; padding: 15px; border-radius: 15px; border: 1px solid var(--primary-light); background: rgba(30, 136, 116, 0.05); display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s;">
+        <i class="bx bx-microphone" style="font-size: 28px; color: var(--primary-color);"></i>
+        <span style="font-size: 13px; font-weight: 600; color: var(--primary-color);">Bicara (Arab)</span>
       </button>
     </div>
   `;
@@ -1048,8 +1084,8 @@ function renderAiView() {
   const chatHistory = layout.querySelector("#chatHistoryContainer");
   const typingIndicator = layout.querySelector("#aiTypingIndicator");
   const chatInput = layout.querySelector("#chatInputField");
-  const sendBtn = layout.querySelector("#sendChatBtn");
-  const voiceBtn = layout.querySelector("#voiceInputBtn");
+  const voiceInputIdBtn = layout.querySelector("#voiceInputIdBtn");
+  const voiceInputArBtn = layout.querySelector("#voiceInputArBtn");
   const scenarioSelect = layout.querySelector("#inlineScenarioSelect");
   const clearChatBtn = layout.querySelector("#inlineClearChatBtn");
 
@@ -1063,18 +1099,14 @@ function renderAiView() {
 
   // --- WIRING LISTENERS ---
 
-  // 1. Send text message
-  sendBtn.addEventListener("click", () => handleUserSendMessage(chatHistory, chatInput, typingIndicator));
-  chatInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") handleUserSendMessage(chatHistory, chatInput, typingIndicator);
-  });
-
-  // 2. Scenario Switch
+  // 1. Scenario Switch
   if (scenarioSelect) {
     scenarioSelect.addEventListener("change", (e) => {
       const selected = e.target.value;
-      if (selected === "general" && !appState.isPremium) {
-        showPremiumModal();
+      const premiumScenarios = ["suq", "usrah", "mathar", "hiwayah", "mustasyfa", "mihnah", "fushul", "uthlah", "riyadhah"];
+      
+      if (premiumScenarios.includes(selected) && !appState.isPremium) {
+        showPremiumPaywall();
         e.target.value = appState.aiScenario; // Revert selection
         return;
       }
@@ -1095,8 +1127,8 @@ function renderAiView() {
     });
   }
 
-  // 4. Speech to Text (Speech Recognition)
-  setupSpeechRecognition(voiceBtn, chatInput);
+  // 3. Speech to Text (Speech Recognition & Auto Send)
+  setupSpeechRecognition(voiceInputIdBtn, voiceInputArBtn, chatInput, chatHistory, typingIndicator);
 
   // (Removed Dynamic Model Fetching since model is fixed)
 }
@@ -1119,7 +1151,7 @@ function renderChatHistory(container) {
         <p class="arabic-text">${msg.ar || ''}</p>
         <p class="latin-text">${msg.latin || ''}</p>
         <p class="translation-text">${msg.id || ''}</p>
-        <button class="speak-btn" style="position: absolute; bottom: 8px; right: -40px;" aria-label="Putar Suara" id="ai-tts-${idx}">
+        <button class="speak-btn" aria-label="Putar Suara" id="ai-tts-${idx}">
           <i class="bx bx-volume-full"></i>
         </button>
         ${isPracticeable ? `
@@ -1559,39 +1591,59 @@ function parseGeminiResponse(text) {
 }
 
 // --- SPEECH RECOGNITION (SPEECH TO TEXT) ---
-function setupSpeechRecognition(voiceBtn, chatInput) {
+function setupSpeechRecognition(idBtn, arBtn, chatInput, chatHistory, typingIndicator) {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
   if (!SpeechRecognition) {
-    voiceBtn.style.opacity = "0.5";
-    voiceBtn.title = "Browser Anda tidak mendukung pengenalan suara.";
+    if(idBtn) idBtn.style.opacity = "0.5";
+    if(arBtn) arBtn.style.opacity = "0.5";
+    showToast("Browser Anda tidak mendukung Web Speech API.", "error");
     return;
   }
 
   const recognition = new SpeechRecognition();
-  recognition.lang = "ar-SA"; // default to Arabic Saudi Arabia
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
 
   let isListening = false;
+  let currentLang = 'ar-SA';
+  let activeBtn = null;
 
-  voiceBtn.addEventListener("click", () => {
+  const resetMicUI = () => {
+    isListening = false;
+    if (idBtn) idBtn.classList.remove("mic-active");
+    if (arBtn) arBtn.classList.remove("mic-active");
+  };
+
+  const startListening = (btn, lang) => {
     if (isListening) {
       recognition.stop();
-    } else {
-      try {
-        recognition.start();
-      } catch (err) {
-        console.error(err);
-      }
+      if (activeBtn === btn) return; // Toggle off if clicking the same button
     }
-  });
+    
+    currentLang = lang;
+    recognition.lang = lang;
+    activeBtn = btn;
+    
+    try {
+      recognition.start();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (idBtn) {
+    idBtn.addEventListener("click", () => startListening(idBtn, "id-ID"));
+  }
+  
+  if (arBtn) {
+    arBtn.addEventListener("click", () => startListening(arBtn, "ar-SA"));
+  }
 
   recognition.onstart = () => {
     isListening = true;
-    voiceBtn.classList.add("mic-active");
-    chatInput.placeholder = "Mendengarkan... Silakan ucapkan kalimat Bahasa Arab Anda.";
-    showToast("Silakan bicara sekarang...", "info");
+    if (activeBtn) activeBtn.classList.add("mic-active");
+    showToast(`Mendengarkan (${currentLang === 'id-ID' ? 'Indonesia' : 'Arab'})...`, "info");
   };
 
   recognition.onerror = (event) => {
@@ -1607,14 +1659,11 @@ function setupSpeechRecognition(voiceBtn, chatInput) {
   recognition.onresult = (event) => {
     const speechToText = event.results[0][0].transcript;
     chatInput.value = speechToText;
-    showToast("Suara berhasil ditranskrip!", "success");
+    showToast("Suara ditangkap, sedang memproses...", "success");
+    
+    // Auto send to AI
+    handleUserSendMessage(chatHistory, chatInput, typingIndicator);
   };
-
-  function resetMicUI() {
-    isListening = false;
-    voiceBtn.classList.remove("mic-active");
-    chatInput.placeholder = "Ketik balasan Anda dalam Bahasa Arab...";
-  }
 }
 
 // --- DYNAMIC MODEL FETCHING ---

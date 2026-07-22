@@ -624,16 +624,17 @@ body.dark-theme .theme-card {
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  position: absolute;
-  bottom: 8px;
-  right: -40px;
+  position: relative;
+  margin-top: 8px;
+  margin-left: auto; /* Push to right for left bubbles */
+  box-shadow: var(--shadow-sm);
   box-shadow: var(--shadow-sm);
   transition: all 0.2s ease;
 }
 
 .bubble-row.right .speak-btn {
-  right: auto;
-  left: -40px;
+  margin-left: 0;
+  margin-right: auto; /* Push to left for right bubbles */
 }
 
 .speak-btn:hover {
@@ -1342,13 +1343,12 @@ body.dark-theme .chat-input-bar {
     max-width: 85%;
   }
   .speak-btn {
-    bottom: -36px;
-    right: 10px;
+    margin-top: 8px;
     width: 28px;
     height: 28px;
   }
   .bubble-row.right .speak-btn {
-    left: 10px;
+    margin-right: auto;
   }
   .dialogue-body {
     padding-bottom: 40px;
