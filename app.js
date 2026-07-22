@@ -1667,8 +1667,7 @@ function setupSpeechRecognition(idBtn, arBtn, chatInput, chatHistory, typingIndi
 
 // --- DYNAMIC MODEL FETCHING ---
 async function fetchSupportedModelsFromApi(modelDropdownSelect) {
-  if (!appState.geminiApiKey) return;
-  const url = `https://generativelanguage.googleapis.com/v1/models?key=${appState.geminiApiKey}`;
+  const url = `/api/models`;
   try {
     const response = await fetch(url);
     const data = await response.json();
