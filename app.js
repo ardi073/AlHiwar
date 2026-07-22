@@ -27,7 +27,7 @@ let appState = {
 };
 
 // Freemium Control: Theme 1 & 2 are free, rest are locked
-const FREE_THEME_IDS = ["taaruf", "matham"];
+const FREE_THEME_IDS = ["taaruf", "matham", "madrasah"];
 
 function checkPremiumAccess(themeId) {
   if (appState.isPremium) return true;
@@ -50,6 +50,7 @@ function showPremiumPaywall() {
     </div>
 
     <button class="premium-btn" id="loginSubmitBtn">Masuk (Login)</button>
+    <p style="font-size: 12px; margin-top: 10px; color: var(--text-muted);">Belum punya akun? Daftar di website kami (Rp 37.000/bulan)</p>
     <button class="premium-close" id="closePremiumBtn">Kembali ke Beranda</button>
   `;
 
@@ -137,6 +138,7 @@ async function speakArabic(text, onStart = null, onEnd = null) {
   }
 
   try {
+    showToast("Memuat suara...", "info"); // Added Loading Toast
     if (onStart) onStart(); // Memicu animasi UI
     const response = await fetch('/api/tts', {
       method: 'POST',
@@ -680,7 +682,13 @@ function renderFlashcardView() {
   // Handlers
   const themeSelect = layout.querySelector("#themeSelect");
   themeSelect.addEventListener("change", (e) => {
-    appState.activeThemeId = e.target.value;
+    const selectedThemeId = e.target.value;
+    if (!checkPremiumAccess(selectedThemeId)) {
+      showPremiumPaywall();
+      e.target.value = appState.activeThemeId; // revert
+      return;
+    }
+    appState.activeThemeId = selectedThemeId;
     appState.currentFlashcardIndex = 0;
     renderFlashcardView();
   });
@@ -965,7 +973,14 @@ function filterAndRenderDictionary(query, onlyFavorites = false) {
     return;
   }
 
-  filtered.forEach((item, idx) => {
+  let displayList = filtered;
+  const isLimited = !appState.isPremium && filtered.length > 50;
+  
+  if (isLimited) {
+    displayList = filtered.slice(0, 50);
+  }
+
+  displayList.forEach((item, idx) => {
     const isStarred = appState.favoriteWords.includes(item.ar);
     const card = document.createElement("div");
     card.className = "dictionary-card";
@@ -1005,6 +1020,28 @@ function filterAndRenderDictionary(query, onlyFavorites = false) {
 
     listContainer.appendChild(card);
   });
+
+  if (isLimited) {
+    const paywallCard = document.createElement("div");
+    paywallCard.style.padding = "20px";
+    paywallCard.style.textAlign = "center";
+    paywallCard.style.background = "var(--card-bg)";
+    paywallCard.style.borderRadius = "15px";
+    paywallCard.style.border = "1px dashed var(--primary-light)";
+    paywallCard.style.marginTop = "20px";
+    paywallCard.innerHTML = `
+      <i class="bx bxs-lock-alt" style="font-size: 32px; color: var(--primary-color); margin-bottom: 10px;"></i>
+      <h3 style="margin-bottom: 5px; color: var(--text-primary);">Akses Terbatas</h3>
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">Daftar ini dibatasi 50 kata. Tingkatkan ke Premium untuk membuka ribuan kosakata lainnya!</p>
+      <button class="btn btn-primary" id="dictUpgradeBtn">Buka Akses Premium</button>
+    `;
+    
+    paywallCard.querySelector("#dictUpgradeBtn").addEventListener("click", () => {
+      showPremiumPaywall();
+    });
+    
+    listContainer.appendChild(paywallCard);
+  }
 }
 
 // --- 5. TUTOR AI VIEW ---

@@ -57,8 +57,8 @@ Contoh Respon:
       });
     }
 
-    const modelToUse = aiModel || 'gemini-2.0-flash';
-    const url = `https://generativelanguage.googleapis.com/v1/models/${modelToUse}:generateContent?key=${apiKey}`;
+    const modelToUse = aiModel || 'gemini-1.5-flash-latest';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
       method: 'POST',
