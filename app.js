@@ -15,7 +15,7 @@ let appState = {
   currentQuizScore: 0,
   aiScenario: "general",
   aiChatHistory: JSON.parse(localStorage.getItem("aiChatHistory")) || [],
-  aiModel: localStorage.getItem("aiModel") || "gemini-1.5-flash",
+  aiModel: localStorage.getItem("aiModel") || "gemini-1.5-flash-latest",
   aiModelList: JSON.parse(localStorage.getItem("aiModelList")) || [],
   favoriteWords: JSON.parse(localStorage.getItem("favoriteWords")) || [],
   dailyStreak: parseInt(localStorage.getItem("dailyStreak")) || 0,
@@ -1057,9 +1057,9 @@ function renderAiView() {
   const modelOptionsHtml = appState.aiModelList.length > 0
     ? appState.aiModelList.map(m => `<option value="${m}" ${m === appState.aiModel ? 'selected' : ''}>${m}</option>`).join('')
     : `
-      <option value="gemini-1.5-flash" ${appState.aiModel === 'gemini-1.5-flash' ? 'selected' : ''}>Gemini 1.5 Flash (Bawaan)</option>
-      <option value="gemini-2.0-flash" ${appState.aiModel === 'gemini-2.0-flash' ? 'selected' : ''}>Gemini 2.0 Flash (Terbaru)</option>
-      <option value="gemini-1.5-pro" ${appState.aiModel === 'gemini-1.5-pro' ? 'selected' : ''}>Gemini 1.5 Pro</option>
+      <option value="gemini-1.5-flash-latest" ${appState.aiModel === 'gemini-1.5-flash-latest' ? 'selected' : ''}>Gemini 1.5 Flash (Bawaan)</option>
+      <option value="gemini-2.0-flash-exp" ${appState.aiModel === 'gemini-2.0-flash-exp' ? 'selected' : ''}>Gemini 2.0 Flash (Eksperimental)</option>
+      <option value="gemini-1.5-pro-latest" ${appState.aiModel === 'gemini-1.5-pro-latest' ? 'selected' : ''}>Gemini 1.5 Pro</option>
     `;
 
   // 70% Avatar Area

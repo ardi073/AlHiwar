@@ -1,5 +1,5 @@
-// Al-Hiwar Service Worker v14.0
-const CACHE_NAME = 'al-hiwar-v14';
+// Al-Hiwar Service Worker v15.0
+const CACHE_NAME = 'al-hiwar-v15';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
