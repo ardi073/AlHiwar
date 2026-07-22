@@ -1286,46 +1286,8 @@ function handleUserSendMessage(container, inputField, typingIndicator) {
     avatarStatus.innerText = "Sedang berpikir...";
   }
 
-  // Generate reply
-  if (appState.geminiApiKey && appState.geminiApiKey.length > 10) {
-    // API Mode
-    getGeminiApiResponse(text, container, typingIndicator);
-  } else {
-    // Simulator Mode
-    setTimeout(() => {
-      const reply = getOfflineSimulatorResponse(text);
-      appState.aiChatHistory.push(reply);
-      localStorage.setItem("aiChatHistory", JSON.stringify(appState.aiChatHistory));
-
-      typingIndicator.style.display = "none";
-      renderChatHistory(container);
-
-      const speechBubble = document.getElementById("aiSpeechBubble");
-      if (speechBubble) {
-        speechBubble.textContent = reply.ar;
-        speechBubble.classList.remove("hidden");
-
-        speechBubble.style.animation = 'none';
-        speechBubble.offsetHeight;
-        speechBubble.style.animation = null;
-      }
-
-      const avFrame = document.getElementById("ustadzAvatarFrame");
-      const avStatus = document.getElementById("ustadzStatus");
-
-      speakArabic(reply.ar, () => {
-        if (avFrame) {
-          avFrame.className = "avatar-frame avatar-speaking";
-          avStatus.innerText = "Sedang berbicara...";
-        }
-      }, () => {
-        if (avFrame) {
-          avFrame.className = "avatar-frame avatar-idle";
-          avStatus.innerText = "Aktif (Idle)";
-        }
-      });
-    }, 1200);
-  }
+  // Generate reply via Vercel Backend
+  getGeminiApiResponse(text, container, typingIndicator);
 }
 
 // --- OFF LINE SIMULATOR ---
