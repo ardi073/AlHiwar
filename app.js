@@ -162,32 +162,49 @@ const loginForm = document.getElementById('login-form');
 if (loginForm) {
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-  const email = document.getElementById('login-email').value;
-  const password = document.getElementById('login-password').value;
-  
-  const btn = document.getElementById('btn-login-submit');
-  const txt = document.getElementById('txt-login-submit');
-  const alertBox = document.getElementById('login-alert');
-  
-  btn.disabled = true;
-  btn.style.opacity = '0.7';
-  txt.innerHTML = "<i class='bx bx-loader-alt bx-spin' style='margin-right:8px;'></i> Memproses...";
-  
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  
-  if (error) {
-    alertBox.innerHTML = "Email atau password salah. Pastikan Anda sudah mendaftar di website.";
-    alertBox.style.display = 'block';
-    btn.disabled = false;
-    btn.style.opacity = '1';
-    txt.innerHTML = "Masuk Sekarang";
-  } else {
-    alertBox.style.display = 'none';
-    document.getElementById('login-overlay').style.display = 'none';
-    showToast("Login Berhasil!");
-    checkPremiumStatus(data.user.id);
-  }
-});
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    
+    const btn = document.getElementById('btn-login-submit');
+    const txt = document.getElementById('txt-login-submit');
+    const alertBox = document.getElementById('login-alert');
+    
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+    txt.innerHTML = "<i class='bx bx-loader-alt bx-spin' style='margin-right:8px;'></i> Memproses...";
+    
+    if (!supabase) {
+      alertBox.innerHTML = "Sistem login diblokir oleh HP Anda. Harap matikan AdBlocker atau gunakan browser standar.";
+      alertBox.style.display = 'block';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      txt.innerHTML = "Masuk Sekarang";
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        alertBox.innerHTML = "Email atau password salah. Pastikan Anda sudah mendaftar di website.";
+        alertBox.style.display = 'block';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        txt.innerHTML = "Masuk Sekarang";
+      } else {
+        alertBox.style.display = 'none';
+        document.getElementById('login-overlay').style.display = 'none';
+        showToast("Login Berhasil!");
+        checkPremiumStatus(data.user.id);
+      }
+    } catch (err) {
+      alertBox.innerHTML = "Terjadi kesalahan jaringan atau sistem.";
+      alertBox.style.display = 'block';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      txt.innerHTML = "Masuk Sekarang";
+    }
+  });
 }
 
 // --- DOM ELEMENTS ---
