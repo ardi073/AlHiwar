@@ -234,12 +234,17 @@ const elements = {
 
 // --- INITIALIZATION ---
 document.addEventListener("DOMContentLoaded", () => {
-  calculateStreak();
-  initTheme();
-  setupEventListeners();
-  updateProgressWidget();
-  renderActiveTab();
-  initAuth();
+  try {
+    calculateStreak();
+    initTheme();
+    setupEventListeners();
+    updateProgressWidget();
+    renderActiveTab();
+    initAuth();
+  } catch (err) {
+    alert("CRITICAL ERROR: " + err.message + "\nLine: " + err.lineNumber);
+    console.error("Initialization error:", err);
+  }
 });
 
 // --- THEME ENGINE ---
