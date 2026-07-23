@@ -120,8 +120,10 @@ async function checkPremiumStatus(userId) {
 }
 
 // Logika Formulir Login
-document.getElementById('login-form')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
+const loginForm = document.getElementById('login-form');
+if (loginForm) {
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
   const email = document.getElementById('login-email').value;
   const password = document.getElementById('login-password').value;
   
@@ -148,6 +150,7 @@ document.getElementById('login-form')?.addEventListener('submit', async (e) => {
     checkPremiumStatus(data.user.id);
   }
 });
+}
 
 // --- DOM ELEMENTS ---
 const elements = {
