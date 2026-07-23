@@ -39,29 +39,39 @@ const appStorage = {
     try {
       localStorage.removeItem(key);
     } catch(e) {}
+  },
+  getJSON: function(key, fallback) {
+    const val = this.getItem(key);
+    if (!val) return fallback;
+    try {
+      return JSON.parse(val) || fallback;
+    } catch(e) {
+      console.warn("Corrupted JSON in storage for key:", key);
+      return fallback;
+    }
   }
 };
 
 let appState = {
   activeTab: "dashboard",
   activeThemeId: "taaruf", // Default
-  completedThemes: JSON.parse(appStorage.getItem("completedThemes")) || [],
-  quizScores: JSON.parse(appStorage.getItem("quizScores")) || {},
+  completedThemes: appStorage.getJSON("completedThemes", []),
+  quizScores: appStorage.getJSON("quizScores", {}),
   themeMode: appStorage.getItem("themeMode") || "light",
   currentFlashcardIndex: 0,
   currentQuizQuestionIndex: 0,
   quizAnswers: [], // stores correct/incorrect answers for active quiz
   currentQuizScore: 0,
   aiScenario: "general",
-  aiChatHistory: JSON.parse(appStorage.getItem("aiChatHistory")) || [],
+  aiChatHistory: appStorage.getJSON("aiChatHistory", []),
   aiModel: (appStorage.getItem("aiModel") && !appStorage.getItem("aiModel").includes("1.5")) ? appStorage.getItem("aiModel") : "gemini-3.5-flash-lite",
-  aiModelList: JSON.parse(appStorage.getItem("aiModelList")) || [],
-  favoriteWords: JSON.parse(appStorage.getItem("favoriteWords")) || [],
+  aiModelList: appStorage.getJSON("aiModelList", []),
+  favoriteWords: appStorage.getJSON("favoriteWords", []),
   dailyStreak: parseInt(appStorage.getItem("dailyStreak")) || 0,
   lastActiveDate: appStorage.getItem("lastActiveDate") || "",
   totalAiSentences: parseInt(appStorage.getItem("totalAiSentences")) || 0,
   isPremium: false,
-  completedNahwu: JSON.parse(appStorage.getItem("completedNahwu")) || [],
+  completedNahwu: appStorage.getJSON("completedNahwu", []),
   activeNahwuChapter: null
 };
 
