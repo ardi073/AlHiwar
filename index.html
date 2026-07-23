@@ -20,10 +20,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Cairo:wght@400;600;700;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=18">
+  <link rel="stylesheet" href="styles.css?v=19">
   
   <!-- Boxicons for modern icons -->
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   
@@ -112,21 +115,66 @@
     <div class="premium-modal" id="premiumModal"></div>
   </div>
 
+  <!-- LAYAR LOGIN (Overlay) -->
+  <div id="login-overlay" class="fixed inset-0 z-[100] bg-gray-50 flex flex-col items-center justify-center p-6 hidden">
+    <div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm text-center border border-gray-100 relative overflow-hidden">
+        <!-- Dekorasi Background -->
+        <div class="absolute -top-16 -right-16 w-32 h-32 bg-teal-100 rounded-full blur-3xl opacity-60"></div>
+        <div class="absolute -bottom-16 -left-16 w-32 h-32 bg-amber-100 rounded-full blur-3xl opacity-60"></div>
+        
+        <div class="relative z-10">
+            <div class="w-16 h-16 bg-teal-700 rounded-2xl flex items-center justify-center text-white text-3xl font-bold mx-auto mb-4 shadow-lg">
+                <i class='bx bx-lock-alt'></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-1">Masuk ke Al-Hiwar</h2>
+            <p class="text-gray-500 text-sm mb-6">Gunakan email yang sudah Anda daftarkan di website.</p>
+            
+            <div id="login-alert" class="hidden mb-4 p-3 rounded-xl text-sm font-medium bg-red-50 text-red-700 border border-red-200"></div>
+            
+            <form id="login-form" class="space-y-4">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                        <i class='bx bx-envelope'></i>
+                    </div>
+                    <input type="email" id="login-email" required class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-600 outline-none transition-all" placeholder="Email Anda">
+                </div>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                        <i class='bx bx-lock'></i>
+                    </div>
+                    <input type="password" id="login-password" required class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-600 outline-none transition-all" placeholder="Kata Sandi">
+                </div>
+                
+                <button type="submit" id="btn-login-submit" class="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-base font-bold text-white bg-teal-700 hover:bg-teal-800 transition-all transform hover:-translate-y-0.5 mt-2">
+                    <span id="txt-login-submit">Masuk Sekarang</span>
+                </button>
+            </form>
+            
+            <div class="mt-8 border-t border-gray-100 pt-6">
+                <p class="text-sm text-gray-600 mb-2">Belum punya akun Premium?</p>
+                <a href="https://member.alhiwar.click" target="_blank" class="inline-flex items-center justify-center w-full py-2.5 px-4 border border-teal-600 rounded-xl text-sm font-bold text-teal-700 bg-white hover:bg-teal-50 transition-colors">
+                    <i class='bx bx-crown mr-2 text-amber-500'></i> Daftar / Berlangganan
+                </a>
+            </div>
+        </div>
+    </div>
+  </div>
+
   <!-- Data Files (loaded before app.js) -->
-  <script src="data/data-loader.js?v=18"></script>
-  <script src="data/theme-taaruf.js?v=18"></script>
-  <script src="data/theme-matham.js?v=18"></script>
-  <script src="data/theme-madrasah.js?v=18"></script>
-  <script src="data/theme-suq.js?v=18"></script>
-  <script src="data/theme-usrah.js?v=18"></script>
-  <script src="data/theme-mathar.js?v=18"></script>
-  <script src="data/theme-hiwayah.js?v=18"></script>
-  <script src="data/theme-mustasyfa.js?v=18"></script>
-  <script src="data/dictionary.js?v=18"></script>
-  <script src="data/nahwu.js?v=18"></script>
+  <script src="data/data-loader.js?v=19"></script>
+  <script src="data/theme-taaruf.js?v=19"></script>
+  <script src="data/theme-matham.js?v=19"></script>
+  <script src="data/theme-madrasah.js?v=19"></script>
+  <script src="data/theme-suq.js?v=19"></script>
+  <script src="data/theme-usrah.js?v=19"></script>
+  <script src="data/theme-mathar.js?v=19"></script>
+  <script src="data/theme-hiwayah.js?v=19"></script>
+  <script src="data/theme-mustasyfa.js?v=19"></script>
+  <script src="data/dictionary.js?v=19"></script>
+  <script src="data/nahwu.js?v=19"></script>
   
   <!-- Main App Logic -->
-  <script src="app.js?v=18"></script>
+  <script src="app.js?v=19"></script>
 
   <!-- Service Worker Registration -->
   <script>

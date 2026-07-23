@@ -3,6 +3,12 @@
 // data-loader.js akan menggabungkan semuanya ke dalam window.learningData dan window.globalDictionary
 const learningData = window.AL_HIWAR_DATA.compile();
 const globalDictionary = window.AL_HIWAR_DATA.compileDictionary();
+
+// Konfigurasi Supabase
+const supabaseUrl = 'https://cjwufugmuhzbvmbixjyx.supabase.co';
+const supabaseKey = 'sb_publishable_L_Ds2zgmc_vK8Unkb-mB4A_cU6BDGEY';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
 let appState = {
   activeTab: "dashboard",
   activeThemeId: "taaruf", // Default
@@ -21,7 +27,7 @@ let appState = {
   dailyStreak: parseInt(localStorage.getItem("dailyStreak")) || 0,
   lastActiveDate: localStorage.getItem("lastActiveDate") || "",
   totalAiSentences: parseInt(localStorage.getItem("totalAiSentences")) || 0,
-  isPremium: localStorage.getItem("isPremium") === "true" || false,
+  isPremium: false,
   completedNahwu: JSON.parse(localStorage.getItem("completedNahwu")) || [],
   activeNahwuChapter: null
 };
@@ -29,59 +35,99 @@ let appState = {
 // Freemium Control: Theme 1 & 2 are free, rest are locked
 const FREE_THEME_IDS = ["taaruf", "matham", "madrasah"];
 
+// Premium Access Check
 function checkPremiumAccess(themeId) {
   if (appState.isPremium) return true;
   if (FREE_THEME_IDS.includes(themeId)) return true;
+  
+  const modal = document.getElementById("premiumModal");
+  modal.innerHTML = `
+    <div class="glass-panel text-center max-w-sm w-full mx-4 relative">
+      <div class="text-4xl text-amber-500 mb-4"><i class='bx bxs-crown'></i></div>
+      <h3 class="text-xl font-bold mb-2">Fitur Premium</h3>
+      <p class="text-gray-600 mb-6 text-sm">Gembok fitur ini hanya bisa dibuka oleh pengguna yang berlangganan Premium di Website Al-Hiwar.</p>
+      
+      <div class="space-y-3">
+        <a href="https://member.alhiwar.click" target="_blank" class="block w-full bg-gradient-to-r from-teal-600 to-teal-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all">
+          Buka Website & Berlangganan
+        </a>
+        <button onclick="closePremiumModal()" class="w-full bg-gray-100 text-gray-700 font-bold py-3 px-4 rounded-xl hover:bg-gray-200 transition-all">
+          Nanti Saja
+        </button>
+      </div>
+    </div>
+  `;
+  
+  modal.classList.add("active");
   return false;
 }
 
-function showPremiumPaywall() {
-  const overlay = document.getElementById("premiumModalOverlay");
-  const modal = document.getElementById("premiumModal");
-
-  modal.innerHTML = `
-    <i class="bx bxs-lock-alt premium-icon" style="color: var(--primary-color);"></i>
-    <h2>Akses Dibatasi</h2>
-    <p>Tema ini khusus untuk pengguna Premium. Jika Anda telah berlangganan di website kami, silakan masuk (Login) menggunakan akun Anda.</p>
-    
-    <div style="display: flex; flex-direction: column; gap: 10px; margin: 15px 0;">
-      <input type="email" id="loginEmail" placeholder="Email Terdaftar" style="padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); outline: none;">
-      <input type="password" id="loginPassword" placeholder="Kata Sandi" style="padding: 10px; border-radius: 8px; border: 1px solid var(--glass-border); outline: none;">
-    </div>
-
-    <button class="premium-btn" id="loginSubmitBtn">Masuk (Login)</button>
-    <p style="font-size: 12px; margin-top: 10px; color: var(--text-muted);">Belum punya akun? Daftar di website kami (Rp 37.000/bulan)</p>
-    <button class="premium-close" id="closePremiumBtn">Kembali ke Beranda</button>
-  `;
-
-  overlay.style.display = "flex";
-
-  document.getElementById("closePremiumBtn").onclick = () => {
-    overlay.style.display = "none";
-  };
-
-  document.getElementById("loginSubmitBtn").onclick = () => {
-    const email = document.getElementById("loginEmail").value;
-    const pass = document.getElementById("loginPassword").value;
-    
-    if (email.includes("@") && pass.length > 3) {
-      // TODO: Hubungkan ke Supabase Database
-      appState.isPremium = true;
-      localStorage.setItem("isPremium", "true");
-      overlay.style.display = "none";
-      showToast("Login Berhasil! Akses Premium Terbuka.", "success");
-      
-      // Auto reload AI View to show the locked scenario
-      if (appState.activeTab === "ai") {
-        renderAiView();
-      } else {
-        renderActiveTab();
-      }
-    } else {
-      showToast("Email atau Kata Sandi salah.", "error");
-    }
-  };
+function closePremiumModal() {
+  document.getElementById("premiumModal").classList.remove("active");
 }
+
+// ==========================================
+// SUPABASE AUTH & INIT
+// ==========================================
+async function initAuth() {
+  const { data: { session } } = await supabase.auth.getSession();
+  const loginOverlay = document.getElementById('login-overlay');
+  
+  if (!session) {
+    // Tampilkan layar login
+    if (loginOverlay) loginOverlay.classList.remove('hidden');
+  } else {
+    // Sembunyikan layar login & cek status premium
+    if (loginOverlay) loginOverlay.classList.add('hidden');
+    checkPremiumStatus(session.user.id);
+  }
+}
+
+async function checkPremiumStatus(userId) {
+  try {
+    const { data, error } = await supabase
+      .from('users_premium')
+      .select('is_premium')
+      .eq('id', userId)
+      .single();
+      
+    if (data) {
+      appState.isPremium = data.is_premium;
+    }
+  } catch (err) {
+    console.error("Gagal mengambil data premium", err);
+  }
+}
+
+// Logika Formulir Login
+document.getElementById('login-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  
+  const btn = document.getElementById('btn-login-submit');
+  const txt = document.getElementById('txt-login-submit');
+  const alertBox = document.getElementById('login-alert');
+  
+  btn.disabled = true;
+  btn.classList.add('opacity-70');
+  txt.innerHTML = "<i class='bx bx-loader-alt bx-spin mr-2'></i> Memproses...";
+  
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  
+  if (error) {
+    alertBox.innerHTML = "Email atau password salah. Pastikan Anda sudah mendaftar di website.";
+    alertBox.classList.remove('hidden');
+    btn.disabled = false;
+    btn.classList.remove('opacity-70');
+    txt.innerHTML = "Masuk Sekarang";
+  } else {
+    alertBox.classList.add('hidden');
+    document.getElementById('login-overlay').classList.add('hidden');
+    showToast("Login Berhasil!");
+    checkPremiumStatus(data.user.id);
+  }
+});
 
 // --- DOM ELEMENTS ---
 const elements = {
@@ -101,6 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();
   updateProgressWidget();
   renderActiveTab();
+  initAuth();
 });
 
 // --- THEME ENGINE ---
