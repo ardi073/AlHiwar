@@ -53,11 +53,12 @@ function checkPremiumAccess(themeId) {
       <p class="text-gray-600 mb-6 text-sm">Gembok fitur ini hanya bisa dibuka oleh pengguna yang berlangganan Premium di Website Al-Hiwar.</p>
       
       <div class="space-y-3">
-        <a href="https://member.alhiwar.click" target="_blank" class="block w-full bg-gradient-to-r from-teal-600 to-teal-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all">
-          Buka Website & Berlangganan
-        </a>
+        <div class="bg-gray-50 border border-gray-200 p-3 rounded-xl mb-3 text-left">
+          <p class="text-xs text-gray-500 mb-1"><i class='bx bx-info-circle'></i> Pendaftaran akun baru dilakukan via browser:</p>
+          <p class="text-sm text-gray-800 font-bold text-center mt-2">member.alhiwar.click</p>
+        </div>
         <button onclick="closePremiumModal()" class="w-full bg-gray-100 text-gray-700 font-bold py-3 px-4 rounded-xl hover:bg-gray-200 transition-all">
-          Nanti Saja
+          Tutup
         </button>
       </div>
     </div>
