@@ -18,26 +18,50 @@ if (window.supabase) {
   console.error("Supabase SDK gagal dimuat dari CDN!");
 }
 
+const appStorage = {
+  memory: {},
+  getItem: function(key) {
+    try {
+      const val = localStorage.getItem(key);
+      return val !== null ? val : (this.memory[key] || null);
+    } catch(e) {
+      return this.memory[key] || null;
+    }
+  },
+  setItem: function(key, value) {
+    this.memory[key] = String(value);
+    try {
+      localStorage.setItem(key, value);
+    } catch(e) {}
+  },
+  removeItem: function(key) {
+    delete this.memory[key];
+    try {
+      localStorage.removeItem(key);
+    } catch(e) {}
+  }
+};
+
 let appState = {
   activeTab: "dashboard",
   activeThemeId: "taaruf", // Default
-  completedThemes: JSON.parse(localStorage.getItem("completedThemes")) || [],
-  quizScores: JSON.parse(localStorage.getItem("quizScores")) || {},
-  themeMode: localStorage.getItem("themeMode") || "light",
+  completedThemes: JSON.parse(appStorage.getItem("completedThemes")) || [],
+  quizScores: JSON.parse(appStorage.getItem("quizScores")) || {},
+  themeMode: appStorage.getItem("themeMode") || "light",
   currentFlashcardIndex: 0,
   currentQuizQuestionIndex: 0,
   quizAnswers: [], // stores correct/incorrect answers for active quiz
   currentQuizScore: 0,
   aiScenario: "general",
-  aiChatHistory: JSON.parse(localStorage.getItem("aiChatHistory")) || [],
-  aiModel: (localStorage.getItem("aiModel") && !localStorage.getItem("aiModel").includes("1.5")) ? localStorage.getItem("aiModel") : "gemini-3.5-flash-lite",
-  aiModelList: JSON.parse(localStorage.getItem("aiModelList")) || [],
-  favoriteWords: JSON.parse(localStorage.getItem("favoriteWords")) || [],
-  dailyStreak: parseInt(localStorage.getItem("dailyStreak")) || 0,
-  lastActiveDate: localStorage.getItem("lastActiveDate") || "",
-  totalAiSentences: parseInt(localStorage.getItem("totalAiSentences")) || 0,
+  aiChatHistory: JSON.parse(appStorage.getItem("aiChatHistory")) || [],
+  aiModel: (appStorage.getItem("aiModel") && !appStorage.getItem("aiModel").includes("1.5")) ? appStorage.getItem("aiModel") : "gemini-3.5-flash-lite",
+  aiModelList: JSON.parse(appStorage.getItem("aiModelList")) || [],
+  favoriteWords: JSON.parse(appStorage.getItem("favoriteWords")) || [],
+  dailyStreak: parseInt(appStorage.getItem("dailyStreak")) || 0,
+  lastActiveDate: appStorage.getItem("lastActiveDate") || "",
+  totalAiSentences: parseInt(appStorage.getItem("totalAiSentences")) || 0,
   isPremium: false,
-  completedNahwu: JSON.parse(localStorage.getItem("completedNahwu")) || [],
+  completedNahwu: JSON.parse(appStorage.getItem("completedNahwu")) || [],
   activeNahwuChapter: null
 };
 
@@ -198,7 +222,7 @@ function toggleTheme() {
     elements.themeToggleIcon.className = "bx bx-sun";
     appState.themeMode = "dark";
   }
-  localStorage.setItem("themeMode", appState.themeMode);
+  appStorage.setItem("themeMode", appState.themeMode);
   showToast(`Mode ${appState.themeMode === 'dark' ? 'Gelap' : 'Terang'} diaktifkan`, "info");
 }
 
@@ -376,7 +400,7 @@ function updateProgressWidget() {
 function completeTheme(themeId) {
   if (!appState.completedThemes.includes(themeId)) {
     appState.completedThemes.push(themeId);
-    localStorage.setItem("completedThemes", JSON.stringify(appState.completedThemes));
+    appStorage.setItem("completedThemes", JSON.stringify(appState.completedThemes));
     updateProgressWidget();
     showToast("Hebat! Anda menyelesaikan tema ini 🎉", "success");
 
@@ -906,7 +930,7 @@ function renderQuizResults(container, theme) {
   const prevHighScore = appState.quizScores[theme.id] || 0;
   if (appState.currentQuizScore > prevHighScore) {
     appState.quizScores[theme.id] = appState.currentQuizScore;
-    localStorage.setItem("quizScores", JSON.stringify(appState.quizScores));
+    appStorage.setItem("quizScores", JSON.stringify(appState.quizScores));
   }
 
   // If score is 100%, automatically mark theme as complete
@@ -1222,9 +1246,9 @@ function renderAiView() {
         return;
       }
       appState.aiScenario = selected;
-      localStorage.setItem("aiScenario", selected);
+      appStorage.setItem("aiScenario", selected);
       appState.aiChatHistory = [];
-      localStorage.removeItem("aiChatHistory");
+      appStorage.removeItem("aiChatHistory");
       renderAiView(); // reload
     });
   }
@@ -1233,7 +1257,7 @@ function renderAiView() {
   if (clearChatBtn) {
     clearChatBtn.addEventListener("click", () => {
       appState.aiChatHistory = [];
-      localStorage.removeItem("aiChatHistory");
+      appStorage.removeItem("aiChatHistory");
       renderAiView();
     });
   }
@@ -1361,7 +1385,7 @@ function sendWelcomeMessage(container) {
   }
 
   appState.aiChatHistory.push(welcomeMsg);
-  localStorage.setItem("aiChatHistory", JSON.stringify(appState.aiChatHistory));
+  appStorage.setItem("aiChatHistory", JSON.stringify(appState.aiChatHistory));
   renderChatHistory(container);
 
   // Auto-play sound
@@ -1375,12 +1399,12 @@ function handleUserSendMessage(container, inputField, typingIndicator) {
 
   // Increment AI Practice stats
   appState.totalAiSentences++;
-  localStorage.setItem("totalAiSentences", appState.totalAiSentences);
+  appStorage.setItem("totalAiSentences", appState.totalAiSentences);
 
   // Add user bubble
   const userMsg = { sender: "user", text: text };
   appState.aiChatHistory.push(userMsg);
-  localStorage.setItem("aiChatHistory", JSON.stringify(appState.aiChatHistory));
+  appStorage.setItem("aiChatHistory", JSON.stringify(appState.aiChatHistory));
   renderChatHistory(container);
 
   // Clear input field
@@ -1539,7 +1563,7 @@ async function getGeminiApiResponse(userText, container, typingIndicator) {
         id: `Gagal memanggil Gemini API:\n**Pesan Kesalahan:** "${errMsg}"\n\nSilakan periksa kembali API Key Anda.`
       };
       appState.aiChatHistory.push(errReply);
-      localStorage.setItem("aiChatHistory", JSON.stringify(appState.aiChatHistory));
+      appStorage.setItem("aiChatHistory", JSON.stringify(appState.aiChatHistory));
       renderChatHistory(container);
 
       const speechBubble = document.getElementById("aiSpeechBubble");
@@ -1555,10 +1579,10 @@ async function getGeminiApiResponse(userText, container, typingIndicator) {
       const parsed = parseGeminiResponse(rawText);
 
       appState.totalAiSentences++;
-      localStorage.setItem("totalAiSentences", appState.totalAiSentences);
+      appStorage.setItem("totalAiSentences", appState.totalAiSentences);
 
       appState.aiChatHistory.push(parsed);
-      localStorage.setItem("aiChatHistory", JSON.stringify(appState.aiChatHistory));
+      appStorage.setItem("aiChatHistory", JSON.stringify(appState.aiChatHistory));
       renderChatHistory(container);
       container.scrollTop = container.scrollHeight;
 
@@ -1761,7 +1785,7 @@ async function fetchSupportedModelsFromApi(modelDropdownSelect) {
 
       if (genModels.length > 0) {
         appState.aiModelList = genModels;
-        localStorage.setItem("aiModelList", JSON.stringify(appState.aiModelList));
+        appStorage.setItem("aiModelList", JSON.stringify(appState.aiModelList));
 
         // Re-populate dropdown
         if (modelDropdownSelect) {
@@ -1773,7 +1797,7 @@ async function fetchSupportedModelsFromApi(modelDropdownSelect) {
         // If current model is not in the fetched list, set it to the first available
         if (!appState.aiModelList.includes(appState.aiModel)) {
           appState.aiModel = appState.aiModelList[0];
-          localStorage.setItem("aiModel", appState.aiModel);
+          appStorage.setItem("aiModel", appState.aiModel);
         }
       }
     } else if (data.error) {
@@ -1831,14 +1855,14 @@ async function runApiDiagnostics(container) {
       // Auto-update model dropdown and state
       if (models.length > 0) {
         appState.aiModelList = models;
-        localStorage.setItem("aiModelList", JSON.stringify(appState.aiModelList));
+        appStorage.setItem("aiModelList", JSON.stringify(appState.aiModelList));
 
         const modelDropdownSelect = document.getElementById("aiModelSelect");
 
         // If current active model is not supported by key, pick the first available
         if (!appState.aiModelList.includes(appState.aiModel)) {
           appState.aiModel = appState.aiModelList[0];
-          localStorage.setItem("aiModel", appState.aiModel);
+          appStorage.setItem("aiModel", appState.aiModel);
         }
 
         if (modelDropdownSelect) {
@@ -1904,8 +1928,8 @@ function calculateStreak() {
   }
 
   appState.lastActiveDate = today;
-  localStorage.setItem("dailyStreak", appState.dailyStreak);
-  localStorage.setItem("lastActiveDate", appState.lastActiveDate);
+  appStorage.setItem("dailyStreak", appState.dailyStreak);
+  appStorage.setItem("lastActiveDate", appState.lastActiveDate);
 }
 
 // 2. Play Synthesized Sound Effects
@@ -2056,7 +2080,7 @@ function toggleFavoriteWord(arabic) {
     appState.favoriteWords.push(arabic);
     showToast("Ditambahkan ke favorit", "success");
   }
-  localStorage.setItem("favoriteWords", JSON.stringify(appState.favoriteWords));
+  appStorage.setItem("favoriteWords", JSON.stringify(appState.favoriteWords));
   updateProgressWidget();
 }
 
@@ -2355,7 +2379,7 @@ function renderNahwuChapter(container, chapter) {
             if (!appState.completedNahwu) appState.completedNahwu = [];
             if (!appState.completedNahwu.includes(chapter.id)) {
               appState.completedNahwu.push(chapter.id);
-              localStorage.setItem("completedNahwu", JSON.stringify(appState.completedNahwu));
+              appStorage.setItem("completedNahwu", JSON.stringify(appState.completedNahwu));
             }
             playSynthesizedSound("fanfare");
           }
@@ -2424,7 +2448,7 @@ function renderNahwuChapter(container, chapter) {
     if (!appState.completedNahwu) appState.completedNahwu = [];
     if (!appState.completedNahwu.includes(chapter.id)) {
       appState.completedNahwu.push(chapter.id);
-      localStorage.setItem("completedNahwu", JSON.stringify(appState.completedNahwu));
+      appStorage.setItem("completedNahwu", JSON.stringify(appState.completedNahwu));
       showToast("Bab ini ditandai selesai!", "success");
       renderNahwuView();
     }
