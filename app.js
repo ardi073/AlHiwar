@@ -7,7 +7,12 @@ const globalDictionary = window.AL_HIWAR_DATA.compileDictionary();
 // Konfigurasi Supabase
 const supabaseUrl = 'https://cjwufugmuhzbvmbixjyx.supabase.co';
 const supabaseKey = 'sb_publishable_L_Ds2zgmc_vK8Unkb-mB4A_cU6BDGEY';
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+let supabase = null;
+if (window.supabase) {
+  supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+} else {
+  console.error("Supabase SDK gagal dimuat dari CDN!");
+}
 
 let appState = {
   activeTab: "dashboard",
@@ -70,16 +75,30 @@ function closePremiumModal() {
 // SUPABASE AUTH & INIT
 // ==========================================
 async function initAuth() {
-  const { data: { session } } = await supabase.auth.getSession();
   const loginOverlay = document.getElementById('login-overlay');
   
-  if (!session) {
-    // Tampilkan layar login
+  if (!supabase) {
+    console.error("Supabase belum terinisialisasi.");
     if (loginOverlay) loginOverlay.style.display = 'flex';
-  } else {
-    // Sembunyikan layar login & cek status premium
-    if (loginOverlay) loginOverlay.style.display = 'none';
-    checkPremiumStatus(session.user.id);
+    document.getElementById('login-alert').innerHTML = "Koneksi ke server gagal. Harap refresh halaman atau matikan AdBlocker.";
+    document.getElementById('login-alert').style.display = 'block';
+    return;
+  }
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      // Tampilkan layar login
+      if (loginOverlay) loginOverlay.style.display = 'flex';
+    } else {
+      // Sembunyikan layar login & cek status premium
+      if (loginOverlay) loginOverlay.style.display = 'none';
+      checkPremiumStatus(session.user.id);
+    }
+  } catch (err) {
+    console.error("Error mengambil sesi:", err);
+    if (loginOverlay) loginOverlay.style.display = 'flex';
   }
 }
 
