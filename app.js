@@ -9,7 +9,11 @@ const supabaseUrl = 'https://cjwufugmuhzbvmbixjyx.supabase.co';
 const supabaseKey = 'sb_publishable_L_Ds2zgmc_vK8Unkb-mB4A_cU6BDGEY';
 let supabase = null;
 if (window.supabase) {
-  supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+  try {
+    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+  } catch (err) {
+    console.error("Gagal menginisialisasi Supabase (mungkin localStorage diblokir):", err);
+  }
 } else {
   console.error("Supabase SDK gagal dimuat dari CDN!");
 }
