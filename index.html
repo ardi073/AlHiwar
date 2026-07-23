@@ -116,46 +116,36 @@
   </div>
 
   <!-- LAYAR LOGIN (Overlay) -->
-  <div id="login-overlay" class="fixed inset-0 z-[100] bg-gray-50 flex flex-col items-center justify-center p-6 hidden">
-    <div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm text-center border border-gray-100 relative overflow-hidden">
-        <!-- Dekorasi Background -->
-        <div class="absolute -top-16 -right-16 w-32 h-32 bg-teal-100 rounded-full blur-3xl opacity-60"></div>
-        <div class="absolute -bottom-16 -left-16 w-32 h-32 bg-amber-100 rounded-full blur-3xl opacity-60"></div>
+  <div id="login-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-color); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: var(--card-bg); border-radius: 24px; padding: 30px 20px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid var(--glass-border);">
+        <div style="width: 70px; height: 70px; background: var(--primary-color); border-radius: 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 35px; margin: 0 auto 20px auto; box-shadow: 0 5px 15px rgba(20, 184, 166, 0.3);">
+            <i class='bx bx-lock-alt'></i>
+        </div>
+        <h2 style="font-size: 24px; font-weight: 700; color: var(--text-color); margin-bottom: 8px;">Masuk ke Al-Hiwar</h2>
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 25px;">Gunakan email yang sudah Anda daftarkan di website.</p>
         
-        <div class="relative z-10">
-            <div class="w-16 h-16 bg-teal-700 rounded-2xl flex items-center justify-center text-white text-3xl font-bold mx-auto mb-4 shadow-lg">
-                <i class='bx bx-lock-alt'></i>
+        <div id="login-alert" style="display: none; background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 12px; font-size: 13px; margin-bottom: 20px; border: 1px solid #fca5a5;"></div>
+        
+        <form id="login-form" style="display: flex; flex-direction: column; gap: 15px;">
+            <div style="position: relative;">
+                <i class='bx bx-envelope' style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 20px;"></i>
+                <input type="email" id="login-email" required placeholder="Email Anda" style="width: 100%; padding: 14px 15px 14px 45px; border-radius: 14px; border: 1px solid var(--glass-border); background: var(--bg-color); color: var(--text-color); font-size: 15px; outline: none; transition: 0.3s; box-sizing: border-box;">
             </div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-1">Masuk ke Al-Hiwar</h2>
-            <p class="text-gray-500 text-sm mb-6">Gunakan email yang sudah Anda daftarkan di website.</p>
-            
-            <div id="login-alert" class="hidden mb-4 p-3 rounded-xl text-sm font-medium bg-red-50 text-red-700 border border-red-200"></div>
-            
-            <form id="login-form" class="space-y-4">
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                        <i class='bx bx-envelope'></i>
-                    </div>
-                    <input type="email" id="login-email" required class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-600 outline-none transition-all" placeholder="Email Anda">
-                </div>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                        <i class='bx bx-lock'></i>
-                    </div>
-                    <input type="password" id="login-password" required class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-600 outline-none transition-all" placeholder="Kata Sandi">
-                </div>
-                
-                <button type="submit" id="btn-login-submit" class="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-base font-bold text-white bg-teal-700 hover:bg-teal-800 transition-all transform hover:-translate-y-0.5 mt-2">
-                    <span id="txt-login-submit">Masuk Sekarang</span>
-                </button>
-            </form>
-            
-            <div class="mt-8 border-t border-gray-100 pt-6">
-                <p class="text-sm text-gray-600 mb-2">Belum punya akun Premium?</p>
-                <a href="https://member.alhiwar.click" target="_blank" class="inline-flex items-center justify-center w-full py-2.5 px-4 border border-teal-600 rounded-xl text-sm font-bold text-teal-700 bg-white hover:bg-teal-50 transition-colors">
-                    <i class='bx bx-crown mr-2 text-amber-500'></i> Daftar / Berlangganan
-                </a>
+            <div style="position: relative;">
+                <i class='bx bx-lock' style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 20px;"></i>
+                <input type="password" id="login-password" required placeholder="Kata Sandi" style="width: 100%; padding: 14px 15px 14px 45px; border-radius: 14px; border: 1px solid var(--glass-border); background: var(--bg-color); color: var(--text-color); font-size: 15px; outline: none; transition: 0.3s; box-sizing: border-box;">
             </div>
+            
+            <button type="submit" id="btn-login-submit" style="width: 100%; padding: 15px; border-radius: 14px; border: none; background: var(--primary-color); color: white; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 10px rgba(20, 184, 166, 0.2); display: flex; justify-content: center; align-items: center;">
+                <span id="txt-login-submit">Masuk Sekarang</span>
+            </button>
+        </form>
+        
+        <div style="margin-top: 30px; padding-top: 25px; border-top: 1px solid var(--glass-border);">
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">Belum punya akun Premium?</p>
+            <a href="https://member.alhiwar.click" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--primary-color); color: var(--primary-color); text-decoration: none; font-weight: bold; font-size: 14px; box-sizing: border-box;">
+                <i class='bx bx-crown' style="color: #f59e0b; margin-right: 8px; font-size: 18px;"></i> Daftar / Berlangganan
+            </a>
         </div>
     </div>
   </div>

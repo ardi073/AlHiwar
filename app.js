@@ -75,10 +75,10 @@ async function initAuth() {
   
   if (!session) {
     // Tampilkan layar login
-    if (loginOverlay) loginOverlay.classList.remove('hidden');
+    if (loginOverlay) loginOverlay.style.display = 'flex';
   } else {
     // Sembunyikan layar login & cek status premium
-    if (loginOverlay) loginOverlay.classList.add('hidden');
+    if (loginOverlay) loginOverlay.style.display = 'none';
     checkPremiumStatus(session.user.id);
   }
 }
@@ -110,20 +110,20 @@ document.getElementById('login-form')?.addEventListener('submit', async (e) => {
   const alertBox = document.getElementById('login-alert');
   
   btn.disabled = true;
-  btn.classList.add('opacity-70');
-  txt.innerHTML = "<i class='bx bx-loader-alt bx-spin mr-2'></i> Memproses...";
+  btn.style.opacity = '0.7';
+  txt.innerHTML = "<i class='bx bx-loader-alt bx-spin' style='margin-right:8px;'></i> Memproses...";
   
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   
   if (error) {
     alertBox.innerHTML = "Email atau password salah. Pastikan Anda sudah mendaftar di website.";
-    alertBox.classList.remove('hidden');
+    alertBox.style.display = 'block';
     btn.disabled = false;
-    btn.classList.remove('opacity-70');
+    btn.style.opacity = '1';
     txt.innerHTML = "Masuk Sekarang";
   } else {
-    alertBox.classList.add('hidden');
-    document.getElementById('login-overlay').classList.add('hidden');
+    alertBox.style.display = 'none';
+    document.getElementById('login-overlay').style.display = 'none';
     showToast("Login Berhasil!");
     checkPremiumStatus(data.user.id);
   }
