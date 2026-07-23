@@ -1,8 +1,16 @@
 // --- DATA MATERI PEMBELAJARAN (DATABASE) ---
-// Data sekarang dimuat dari file eksternal (di dalam folder data/)
-// data-loader.js akan menggabungkan semuanya ke dalam window.learningData dan window.globalDictionary
-const learningData = window.AL_HIWAR_DATA.compile();
-const globalDictionary = window.AL_HIWAR_DATA.compileDictionary();
+let learningData = { themes: [] };
+let globalDictionary = [];
+try {
+  if (window.AL_HIWAR_DATA && typeof window.AL_HIWAR_DATA.compile === 'function') {
+    learningData = window.AL_HIWAR_DATA.compile();
+  }
+  if (window.AL_HIWAR_DATA && typeof window.AL_HIWAR_DATA.compileDictionary === 'function') {
+    globalDictionary = window.AL_HIWAR_DATA.compileDictionary();
+  }
+} catch (e) {
+  console.error("Gagal memuat data pembelajaran:", e);
+}
 
 // Konfigurasi Supabase
 const supabaseUrl = 'https://cjwufugmuhzbvmbixjyx.supabase.co';
@@ -12,10 +20,8 @@ if (window.supabase) {
   try {
     supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
   } catch (err) {
-    console.error("Gagal menginisialisasi Supabase (mungkin localStorage diblokir):", err);
+    console.error("Gagal menginisialisasi Supabase:", err);
   }
-} else {
-  console.error("Supabase SDK gagal dimuat dari CDN!");
 }
 
 const appStorage = {
@@ -46,32 +52,40 @@ const appStorage = {
     try {
       return JSON.parse(val) || fallback;
     } catch(e) {
-      console.warn("Corrupted JSON in storage for key:", key);
       return fallback;
     }
   }
 };
 
+function getSafeArray(key) {
+  const val = appStorage.getJSON(key, []);
+  return Array.isArray(val) ? val : [];
+}
+function getSafeObject(key) {
+  const val = appStorage.getJSON(key, {});
+  return (typeof val === 'object' && val !== null && !Array.isArray(val)) ? val : {};
+}
+
 let appState = {
   activeTab: "dashboard",
   activeThemeId: "taaruf", // Default
-  completedThemes: appStorage.getJSON("completedThemes", []),
-  quizScores: appStorage.getJSON("quizScores", {}),
+  completedThemes: getSafeArray("completedThemes"),
+  quizScores: getSafeObject("quizScores"),
   themeMode: appStorage.getItem("themeMode") || "light",
   currentFlashcardIndex: 0,
   currentQuizQuestionIndex: 0,
   quizAnswers: [], // stores correct/incorrect answers for active quiz
   currentQuizScore: 0,
   aiScenario: "general",
-  aiChatHistory: appStorage.getJSON("aiChatHistory", []),
-  aiModel: (appStorage.getItem("aiModel") && !appStorage.getItem("aiModel").includes("1.5")) ? appStorage.getItem("aiModel") : "gemini-3.5-flash-lite",
-  aiModelList: appStorage.getJSON("aiModelList", []),
-  favoriteWords: appStorage.getJSON("favoriteWords", []),
+  aiChatHistory: getSafeArray("aiChatHistory"),
+  aiModel: (appStorage.getItem("aiModel") && typeof appStorage.getItem("aiModel") === 'string' && !appStorage.getItem("aiModel").includes("1.5")) ? appStorage.getItem("aiModel") : "gemini-3.5-flash-lite",
+  aiModelList: getSafeArray("aiModelList"),
+  favoriteWords: getSafeArray("favoriteWords"),
   dailyStreak: parseInt(appStorage.getItem("dailyStreak")) || 0,
   lastActiveDate: appStorage.getItem("lastActiveDate") || "",
   totalAiSentences: parseInt(appStorage.getItem("totalAiSentences")) || 0,
   isPremium: false,
-  completedNahwu: appStorage.getJSON("completedNahwu", []),
+  completedNahwu: getSafeArray("completedNahwu"),
   activeNahwuChapter: null
 };
 
