@@ -234,7 +234,7 @@ const elements = {
 };
 
 // --- INITIALIZATION ---
-document.addEventListener("DOMContentLoaded", () => {
+function initApp() {
   try {
     calculateStreak();
     initTheme();
@@ -243,10 +243,15 @@ document.addEventListener("DOMContentLoaded", () => {
     renderActiveTab();
     initAuth();
   } catch (err) {
-    alert("CRITICAL ERROR: " + err.message + "\nLine: " + err.lineNumber);
     console.error("Initialization error:", err);
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
 
 // --- THEME ENGINE ---
 function initTheme() {
@@ -319,6 +324,34 @@ async function speakArabic(text, onStart = null, onEnd = null) {
     console.error("Koneksi ke backend TTS gagal:", err);
     fallbackSpeakArabic(text, null, onEnd);
   }
+// Text-to-Speech Helper (Refactored to avoid async)
+function speakArabic(text, onStart = null, onEnd = null) {
+  return new Promise(function(resolve, reject) {
+    if (!('speechSynthesis' in window)) {
+      console.warn("TTS not supported");
+      resolve();
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ar-SA';
+    utterance.rate = 0.85; 
+
+    if (onStart) utterance.onstart = onStart;
+    utterance.onend = function() {
+      if (onEnd) onEnd();
+      resolve();
+    };
+    utterance.onerror = function(e) {
+      console.warn("TTS Error", e);
+      if (onEnd) onEnd();
+      resolve();
+    };
+
+    window.speechSynthesis.speak(utterance);
+  });
 }
 
 function fallbackSpeakArabic(text, onStart = null, onEnd = null) {
