@@ -124,10 +124,10 @@ function closePremiumModal() {
   document.getElementById("premiumModal").classList.remove("active");
 }
 
+// // ==========================================
+// SUPABASE AUTH & INIT (Refactored to Promises for old WebViews)
 // ==========================================
-// SUPABASE AUTH & INIT
-// ==========================================
-async function initAuth() {
+function initAuth() {
   const loginOverlay = document.getElementById('login-overlay');
   
   if (!supabase) {
@@ -138,43 +138,40 @@ async function initAuth() {
     return;
   }
 
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
+  supabase.auth.getSession().then(function(result) {
+    const session = result.data.session;
     if (!session) {
-      // Tampilkan layar login
       if (loginOverlay) loginOverlay.style.display = 'flex';
     } else {
-      // Sembunyikan layar login & cek status premium
       if (loginOverlay) loginOverlay.style.display = 'none';
       checkPremiumStatus(session.user.id);
     }
-  } catch (err) {
+  }).catch(function(err) {
     console.error("Error mengambil sesi:", err);
     if (loginOverlay) loginOverlay.style.display = 'flex';
-  }
+  });
 }
 
-async function checkPremiumStatus(userId) {
-  try {
-    const { data, error } = await supabase
-      .from('users_premium')
-      .select('is_premium')
-      .eq('id', userId)
-      .single();
-      
-    if (data) {
-      appState.isPremium = data.is_premium;
-    }
-  } catch (err) {
-    console.error("Gagal mengambil data premium", err);
-  }
+function checkPremiumStatus(userId) {
+  supabase
+    .from('users_premium')
+    .select('is_premium')
+    .eq('id', userId)
+    .single()
+    .then(function(result) {
+      if (result.data) {
+        appState.isPremium = result.data.is_premium;
+      }
+    })
+    .catch(function(err) {
+      console.error("Gagal mengambil data premium", err);
+    });
 }
 
 // Logika Formulir Login
 const loginForm = document.getElementById('login-form');
 if (loginForm) {
-  loginForm.addEventListener('submit', async (e) => {
+  loginForm.addEventListener('submit', function(e) {
     e.preventDefault();
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
@@ -196,28 +193,32 @@ if (loginForm) {
       return;
     }
 
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      
-      if (error) {
-        alertBox.innerHTML = "Email atau password salah. Pastikan Anda sudah mendaftar di website.";
+    supabase.auth.signInWithPassword({ email: email, password: password })
+      .then(function(result) {
+        if (result.error) throw result.error;
+        
+        alertBox.style.display = 'none';
+        txt.innerHTML = "<i class='bx bx-check'></i> Berhasil Masuk!";
+        btn.style.background = "var(--success)";
+        
+        setTimeout(function() {
+          document.getElementById('login-overlay').style.display = 'none';
+          checkPremiumStatus(result.data.user.id);
+          
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          txt.innerHTML = "Masuk Sekarang";
+          btn.style.background = "var(--primary-color)";
+        }, 1500);
+      })
+      .catch(function(error) {
+        alertBox.innerHTML = error.message === 'Invalid login credentials' ? 'Email atau kata sandi salah.' : error.message;
         alertBox.style.display = 'block';
+        
         btn.disabled = false;
         btn.style.opacity = '1';
         txt.innerHTML = "Masuk Sekarang";
-      } else {
-        alertBox.style.display = 'none';
-        document.getElementById('login-overlay').style.display = 'none';
-        showToast("Login Berhasil!");
-        checkPremiumStatus(data.user.id);
-      }
-    } catch (err) {
-      alertBox.innerHTML = "Terjadi kesalahan jaringan atau sistem.";
-      alertBox.style.display = 'block';
-      btn.disabled = false;
-      btn.style.opacity = '1';
-      txt.innerHTML = "Masuk Sekarang";
-    }
+      });
   });
 }
 
