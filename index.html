@@ -152,28 +152,31 @@
   </div>
 
   <!-- Data Files (loaded before app.js) -->
-  <script src="data/data-loader.js?v=33"></script>
-  <script src="data/theme-taaruf.js?v=33"></script>
-  <script src="data/theme-matham.js?v=33"></script>
-  <script src="data/theme-madrasah.js?v=33"></script>
-  <script src="data/theme-suq.js?v=33"></script>
-  <script src="data/theme-usrah.js?v=33"></script>
-  <script src="data/theme-mathar.js?v=33"></script>
-  <script src="data/theme-hiwayah.js?v=33"></script>
-  <script src="data/theme-mustasyfa.js?v=33"></script>
-  <script src="data/dictionary.js?v=33"></script>
-  <script src="data/nahwu.js?v=33"></script>
+  <script type="text/babel" data-presets="es2015" src="data/data-loader.js?v=33"></script>
+  <script type="text/babel" data-presets="es2015" src="data/theme-taaruf.js?v=33"></script>
+  <script type="text/babel" data-presets="es2015" src="data/theme-matham.js?v=33"></script>
+  <script type="text/babel" data-presets="es2015" src="data/theme-madrasah.js?v=33"></script>
+  <script type="text/babel" data-presets="es2015" src="data/theme-suq.js?v=33"></script>
+  <script type="text/babel" data-presets="es2015" src="data/theme-usrah.js?v=33"></script>
+  <script type="text/babel" data-presets="es2015" src="data/theme-mathar.js?v=33"></script>
+  <script type="text/babel" data-presets="es2015" src="data/theme-hiwayah.js?v=33"></script>
+  <script type="text/babel" data-presets="es2015" src="data/theme-mustasyfa.js?v=33"></script>
+  <script type="text/babel" data-presets="es2015" src="data/dictionary.js?v=33"></script>
+  <script type="text/babel" data-presets="es2015" src="data/nahwu.js?v=33"></script>
   
-  <!-- Main App Logic -->
-  <script src="app_v34.js?v=34"></script>
+  <!-- Babel Standalone for ES5 Compatibility on Old Android WebViews -->
+  <script src="babel.min.js"></script>
+
+  <!-- Main App Logic (Transpiled by Babel on the fly) -->
+  <script type="text/babel" data-presets="es2015" src="app_v35.js?v=35"></script>
 
   <!-- Service Worker Registration -->
   <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
+      window.addEventListener('load', function() {
         navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('[PWA] Service Worker registered:', reg.scope))
-          .catch(err => console.warn('[PWA] Service Worker registration failed:', err));
+          .then(function(reg) { console.log('[PWA] Service Worker registered:', reg.scope); })
+          .catch(function(err) { console.warn('[PWA] Service Worker registration failed:', err); });
       });
     }
   </script>

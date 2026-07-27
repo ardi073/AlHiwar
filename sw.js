@@ -1,10 +1,11 @@
-// Al-Hiwar Service Worker v34.0
-const CACHE_NAME = 'al-hiwar-v34';
+// Al-Hiwar Service Worker v35.0
+const CACHE_NAME = 'al-hiwar-v35';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './styles.css',
-  './app_v34.js',
+  './babel.min.js',
+  './app_v35.js',
   './manifest.json',
   './ustadz_avatar.jpg',
   './data/data-loader.js',
