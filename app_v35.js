@@ -12,17 +12,51 @@ try {
   console.error("Gagal memuat data pembelajaran:", e);
 }
 
-// Konfigurasi Supabase
 const supabaseUrl = 'https://cjwufugmuhzbvmbixjyx.supabase.co';
 const supabaseKey = 'sb_publishable_L_Ds2zgmc_vK8Unkb-mB4A_cU6BDGEY';
-let supabase = null;
-if (window.supabase) {
-  try {
-    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-  } catch (err) {
-    console.error("Gagal menginisialisasi Supabase:", err);
+
+// CUSTOM REST API CLIENT UNTUK HP LAWAS
+const supabaseClient = {
+  request: function(method, endpoint, body) {
+    return new Promise(function(resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open(method, supabaseUrl + endpoint, true);
+      xhr.setRequestHeader('apikey', supabaseKey);
+      
+      var token = localStorage.getItem('sb-access-token');
+      if (token) {
+        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+      }
+      
+      if (body) {
+        xhr.setRequestHeader('Content-Type', 'application/json');
+      }
+      
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          var response;
+          try {
+            response = JSON.parse(xhr.responseText);
+          } catch(e) {
+            response = xhr.responseText;
+          }
+          
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve({ data: response, error: null });
+          } else {
+            reject({ message: response.error_description || response.msg || "Terjadi kesalahan server." });
+          }
+        }
+      };
+      
+      xhr.onerror = function() {
+        reject({ message: "Network Error: Tidak bisa terhubung ke server." });
+      };
+      
+      xhr.send(body ? JSON.stringify(body) : null);
+    });
   }
-}
+};
 
 const appStorage = {
   memory: {},
@@ -130,37 +164,27 @@ function closePremiumModal() {
 function initAuth() {
   const loginOverlay = document.getElementById('login-overlay');
   
-  if (!supabase) {
-    console.error("Supabase belum terinisialisasi.");
+  var token = localStorage.getItem('sb-access-token');
+  var userJson = localStorage.getItem('sb-user');
+  
+  if (!token || !userJson) {
     if (loginOverlay) loginOverlay.style.display = 'flex';
-    document.getElementById('login-alert').innerHTML = "Koneksi ke server gagal. Harap refresh halaman atau matikan AdBlocker.";
-    document.getElementById('login-alert').style.display = 'block';
-    return;
-  }
-
-  supabase.auth.getSession().then(function(result) {
-    const session = result.data.session;
-    if (!session) {
-      if (loginOverlay) loginOverlay.style.display = 'flex';
-    } else {
+  } else {
+    try {
+      var user = JSON.parse(userJson);
       if (loginOverlay) loginOverlay.style.display = 'none';
-      checkPremiumStatus(session.user.id);
+      checkPremiumStatus(user.id);
+    } catch(e) {
+      if (loginOverlay) loginOverlay.style.display = 'flex';
     }
-  }).catch(function(err) {
-    console.error("Error mengambil sesi:", err);
-    if (loginOverlay) loginOverlay.style.display = 'flex';
-  });
+  }
 }
 
 function checkPremiumStatus(userId) {
-  supabase
-    .from('users_premium')
-    .select('is_premium')
-    .eq('id', userId)
-    .single()
+  supabaseClient.request('GET', '/rest/v1/users_premium?id=eq.' + userId + '&select=is_premium', null)
     .then(function(result) {
-      if (result.data) {
-        appState.isPremium = result.data.is_premium;
+      if (result.data && result.data.length > 0) {
+        appState.isPremium = result.data[0].is_premium;
       }
     })
     .catch(function(err) {
@@ -184,18 +208,10 @@ if (loginForm) {
     btn.style.opacity = '0.7';
     txt.innerHTML = "<i class='bx bx-loader-alt bx-spin' style='margin-right:8px;'></i> Memproses...";
     
-    if (!supabase) {
-      alertBox.innerHTML = "Sistem login diblokir oleh HP Anda. Harap matikan AdBlocker atau gunakan browser standar.";
-      alertBox.style.display = 'block';
-      btn.disabled = false;
-      btn.style.opacity = '1';
-      txt.innerHTML = "Masuk Sekarang";
-      return;
-    }
-
-    supabase.auth.signInWithPassword({ email: email, password: password })
+    supabaseClient.request('POST', '/auth/v1/token?grant_type=password', { email: email, password: password })
       .then(function(result) {
-        if (result.error) throw result.error;
+        localStorage.setItem('sb-access-token', result.data.access_token);
+        localStorage.setItem('sb-user', JSON.stringify(result.data.user));
         
         alertBox.style.display = 'none';
         txt.innerHTML = "<i class='bx bx-check'></i> Berhasil Masuk!";
