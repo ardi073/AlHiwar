@@ -141,8 +141,11 @@ function checkPremiumAccess(themeId) {
       <div class="space-y-3">
         <div class="bg-gray-50 border border-gray-200 p-3 rounded-xl mb-3 text-left">
           <p class="text-xs text-gray-500 mb-1"><i class='bx bx-info-circle'></i> Pendaftaran akun baru dilakukan via browser:</p>
-          <p class="text-sm text-gray-800 font-bold text-center mt-2">member.alhiwar.click</p>
+          <p class="text-sm text-gray-800 font-bold text-center mt-2"><a href="https://member.alhiwar.click" target="_blank" style="color: inherit; text-decoration: none;">member.alhiwar.click</a></p>
         </div>
+        <button onclick="document.getElementById('login-overlay').style.display='flex'; closePremiumModal()" class="w-full bg-teal-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-teal-600 transition-all">
+          Sudah punya akun? Masuk
+        </button>
         <button onclick="closePremiumModal()" class="w-full bg-gray-100 text-gray-700 font-bold py-3 px-4 rounded-xl hover:bg-gray-200 transition-all">
           Tutup
         </button>

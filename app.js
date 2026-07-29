@@ -107,8 +107,11 @@ function checkPremiumAccess(themeId) {
       <div class="space-y-3">
         <div class="bg-gray-50 border border-gray-200 p-3 rounded-xl mb-3 text-left">
           <p class="text-xs text-gray-500 mb-1"><i class='bx bx-info-circle'></i> Pendaftaran akun baru dilakukan via browser:</p>
-          <p class="text-sm text-gray-800 font-bold text-center mt-2">member.alhiwar.click</p>
+          <p class="text-sm text-gray-800 font-bold text-center mt-2"><a href="https://member.alhiwar.click" target="_blank" style="color: inherit; text-decoration: none;">member.alhiwar.click</a></p>
         </div>
+        <button onclick="document.getElementById('login-overlay').style.display='flex'; closePremiumModal()" class="w-full bg-teal-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-teal-600 transition-all">
+          Sudah punya akun? Masuk
+        </button>
         <button onclick="closePremiumModal()" class="w-full bg-gray-100 text-gray-700 font-bold py-3 px-4 rounded-xl hover:bg-gray-200 transition-all">
           Tutup
         </button>
@@ -1607,22 +1610,24 @@ function getOfflineSimulatorResponse(userText) {
 }
 
 // --- GEMINI API INTEG RATION ---
-async function getGeminiApiResponse(userText, container, typingIndicator) {
-  try {
-    const response = await fetch('/api/chat', {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ 
-        userText: userText,
-        aiScenario: appState.aiScenario,
-        aiChatHistory: appState.aiChatHistory,
-        aiModel: appState.aiModel
-      })
-    });
-
-    const data = await response.json();
+// --- GEMINI API INTEGRATION ---
+function getGeminiApiResponse(userText, container, typingIndicator) {
+  fetch('/api/chat', {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ 
+      userText: userText,
+      aiScenario: appState.aiScenario,
+      aiChatHistory: appState.aiChatHistory,
+      aiModel: appState.aiModel
+    })
+  })
+  .then(function(response) {
+    return response.json();
+  })
+  .then(function(data) {
     typingIndicator.style.display = "none";
 
     if (data.error) {
@@ -1640,7 +1645,7 @@ async function getGeminiApiResponse(userText, container, typingIndicator) {
         sender: "ai",
         ar: "خَطَأٌ فِي مِفْتَاحِ API",
         latin: "[Khatha'un fii miftaahi API]",
-        id: `Gagal memanggil Gemini API:\n**Pesan Kesalahan:** "${errMsg}"\n\nSilakan periksa kembali API Key Anda.`
+        id: "Gagal memanggil Gemini API:\n**Pesan Kesalahan:** \"" + errMsg + "\"\n\nSilakan periksa kembali API Key Anda."
       };
       appState.aiChatHistory.push(errReply);
       appStorage.setItem("aiChatHistory", JSON.stringify(appState.aiChatHistory));
@@ -1679,12 +1684,12 @@ async function getGeminiApiResponse(userText, container, typingIndicator) {
       const avFrame = document.getElementById("ustadzAvatarFrame");
       const avStatus = document.getElementById("ustadzStatus");
 
-      speakArabic(parsed.ar, () => {
+      speakArabic(parsed.ar, function() {
         if (avFrame) {
           avFrame.className = "avatar-frame avatar-speaking";
           avStatus.innerText = "Sedang berbicara...";
         }
-      }, () => {
+      }, function() {
         if (avFrame) {
           avFrame.className = "avatar-frame avatar-idle";
           avStatus.innerText = "Aktif (Idle)";
@@ -1694,7 +1699,8 @@ async function getGeminiApiResponse(userText, container, typingIndicator) {
       console.error("Format respons API salah:", data);
       throw new Error("Format respons tidak dikenal");
     }
-  } catch (error) {
+  })
+  .catch(function(error) {
     console.error("Koneksi Gemini API Gagal:", error);
     typingIndicator.style.display = "none";
 
@@ -1714,7 +1720,7 @@ async function getGeminiApiResponse(userText, container, typingIndicator) {
     appState.aiChatHistory.push(errReply);
     renderChatHistory(container);
     container.scrollTop = container.scrollHeight;
-  }
+  });
 }
 
 // Helper to parse the Gemini output format
@@ -1844,52 +1850,55 @@ function setupSpeechRecognition(idBtn, arBtn, chatInput, chatHistory, typingIndi
 }
 
 // --- DYNAMIC MODEL FETCHING ---
-async function fetchSupportedModelsFromApi(modelDropdownSelect) {
+function fetchSupportedModelsFromApi(modelDropdownSelect) {
   const url = `/api/models`;
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    if (data.models) {
-      let genModels = data.models
-        .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"))
-        .map(m => m.name.replace("models/", ""));
+  fetch(url)
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(data) {
+      if (data.models) {
+        let genModels = data.models
+          .filter(function(m) { return m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"); })
+          .map(function(m) { return m.name.replace("models/", ""); });
 
-      // Prioritize flash models (free tier active) over pro models
-      genModels.sort((a, b) => {
-        const aIsFlash = a.includes("flash");
-        const bIsFlash = b.includes("flash");
-        if (aIsFlash && !bIsFlash) return -1;
-        if (!aIsFlash && bIsFlash) return 1;
-        return 0;
-      });
+        // Prioritize flash models (free tier active) over pro models
+        genModels.sort(function(a, b) {
+          const aIsFlash = a.includes("flash");
+          const bIsFlash = b.includes("flash");
+          if (aIsFlash && !bIsFlash) return -1;
+          if (!aIsFlash && bIsFlash) return 1;
+          return 0;
+        });
 
-      if (genModels.length > 0) {
-        appState.aiModelList = genModels;
-        appStorage.setItem("aiModelList", JSON.stringify(appState.aiModelList));
+        if (genModels.length > 0) {
+          appState.aiModelList = genModels;
+          appStorage.setItem("aiModelList", JSON.stringify(appState.aiModelList));
 
-        // Re-populate dropdown
-        if (modelDropdownSelect) {
-          modelDropdownSelect.innerHTML = appState.aiModelList
-            .map(m => `<option value="${m}" ${m === appState.aiModel ? 'selected' : ''}>${m}</option>`)
-            .join('');
+          // Re-populate dropdown
+          if (modelDropdownSelect) {
+            modelDropdownSelect.innerHTML = appState.aiModelList
+              .map(function(m) { return '<option value="' + m + '" ' + (m === appState.aiModel ? 'selected' : '') + '>' + m + '</option>'; })
+              .join('');
+          }
+
+          // If current model is not in the fetched list, set it to the first available
+          if (!appState.aiModelList.includes(appState.aiModel)) {
+            appState.aiModel = appState.aiModelList[0];
+            appStorage.setItem("aiModel", appState.aiModel);
+          }
         }
-
-        // If current model is not in the fetched list, set it to the first available
-        if (!appState.aiModelList.includes(appState.aiModel)) {
-          appState.aiModel = appState.aiModelList[0];
-          appStorage.setItem("aiModel", appState.aiModel);
-        }
+      } else if (data.error) {
+        console.error("Gagal memanggil listModels:", data.error);
       }
-    } else if (data.error) {
-      console.error("Gagal memanggil listModels:", data.error);
-    }
-  } catch (err) {
-    console.error("Gagal mengambil model dari API:", err);
-  }
+    })
+    .catch(function(err) {
+      console.error("Gagal mengambil model dari API:", err);
+    });
 }
 
 // --- API DIAGNOSTICS ---
-async function runApiDiagnostics(container) {
+function runApiDiagnostics(container) {
   if (!appState.geminiApiKey) {
     showToast("Masukkan API Key terlebih dahulu!", "warning");
     return;
@@ -1901,87 +1910,76 @@ async function runApiDiagnostics(container) {
     sender: "ai",
     ar: "تَشْخِيصُ النِّظَامِ",
     latin: "[Tasykhiisun nidhaam]",
-    id: `🛠️ **Memulai Diagnosa API...**\nSedang menghubungkan ke server Google...`
+    id: "🛠️ **Memulai Diagnosa API...**\nSedang menghubungkan ke server Google..."
   };
 
   appState.aiChatHistory.push(initMsg);
   renderChatHistory(container);
 
-  const updateDiag = (text) => {
+  const updateDiag = function(text) {
     appState.aiChatHistory[diagIdx].id = text;
     renderChatHistory(container);
   };
 
-  const url = `https://generativelanguage.googleapis.com/v1/models?key=${appState.geminiApiKey}`;
+  const url = "https://generativelanguage.googleapis.com/v1/models?key=" + appState.geminiApiKey;
 
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-
-    if (res.ok && data.models) {
-      let models = data.models
-        .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"))
-        .map(m => m.name.replace("models/", ""));
-
-      // Prioritize flash models (free tier active) over pro models
-      models.sort((a, b) => {
-        const aIsFlash = a.includes("flash");
-        const bIsFlash = b.includes("flash");
-        if (aIsFlash && !bIsFlash) return -1;
-        if (!aIsFlash && bIsFlash) return 1;
-        return 0;
+  fetch(url)
+    .then(function(res) {
+      return res.json().then(function(data) {
+        return { res: res, data: data };
       });
+    })
+    .then(function(result) {
+      const res = result.res;
+      const data = result.data;
 
-      // Auto-update model dropdown and state
-      if (models.length > 0) {
-        appState.aiModelList = models;
-        appStorage.setItem("aiModelList", JSON.stringify(appState.aiModelList));
+      if (res.ok && data.models) {
+        let models = data.models
+          .filter(function(m) { return m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"); })
+          .map(function(m) { return m.name.replace("models/", ""); });
 
-        const modelDropdownSelect = document.getElementById("aiModelSelect");
+        // Prioritize flash models (free tier active) over pro models
+        models.sort(function(a, b) {
+          const aIsFlash = a.includes("flash");
+          const bIsFlash = b.includes("flash");
+          if (aIsFlash && !bIsFlash) return -1;
+          if (!aIsFlash && bIsFlash) return 1;
+          return 0;
+        });
 
-        // If current active model is not supported by key, pick the first available
-        if (!appState.aiModelList.includes(appState.aiModel)) {
-          appState.aiModel = appState.aiModelList[0];
-          appStorage.setItem("aiModel", appState.aiModel);
+        // Auto-update model dropdown and state
+        if (models.length > 0) {
+          appState.aiModelList = models;
+          appStorage.setItem("aiModelList", JSON.stringify(appState.aiModelList));
+
+          const modelDropdownSelect = document.getElementById("aiModelSelect");
+
+          // If current active model is not supported by key, pick the first available
+          if (!appState.aiModelList.includes(appState.aiModel)) {
+            appState.aiModel = appState.aiModelList[0];
+            appStorage.setItem("aiModel", appState.aiModel);
+          }
+
+          if (modelDropdownSelect) {
+            modelDropdownSelect.innerHTML = appState.aiModelList
+              .map(function(m) { return '<option value="' + m + '" ' + (m === appState.aiModel ? 'selected' : '') + '>' + m + '</option>'; })
+              .join('');
+            modelDropdownSelect.value = appState.aiModel;
+          }
         }
 
-        if (modelDropdownSelect) {
-          modelDropdownSelect.innerHTML = appState.aiModelList
-            .map(m => `<option value="${m}" ${m === appState.aiModel ? 'selected' : ''}>${m}</option>`)
-            .join('');
-          modelDropdownSelect.value = appState.aiModel;
-        }
+        updateDiag("🛠️ **Hasil Diagnosa API (Sukses):**\n✅ **Koneksi Google:** Berhasil terhubung!\n✅ **API Key:** Valid.\n📋 **Daftar Model yang Tersedia di Akun Anda:**\n" + models.map(function(m) { return "- `" + m + "`"; }).join("\n") + "\n\n*Catatan:* Sistem telah memperbarui pilihan model Anda secara otomatis agar kompatibel dengan akun Anda. Sekarang silakan coba ketik pesan obrolan kembali.");
+      } else {
+        const errMsg = data.error ? data.error.message : "Kesalahan tidak dikenal.";
+        const errCode = data.error ? data.error.code : res.status;
+        const errStatus = data.error ? data.error.status : "N/A";
+
+        updateDiag("🛠️ **Hasil Diagnosa API (Gagal):**\n❌ **Koneksi Google:** Gagal (HTTP " + res.status + ")\n❌ **Kode Error:** `" + errCode + "` (" + errStatus + ")\n❌ **Pesan Google:** \"" + errMsg + "\"\n\n*Petunjuk:*\n1. Jika pesannya adalah *\"API key not valid\"*, silakan ketik ulang Kunci API Anda dengan teliti tanpa spasi.\n2. Jika pesannya *\"location is not supported\"*, berarti server Google memblokir akses dari wilayah/IP Anda.\n3. Pastikan Anda membuat Kunci API melalui portal **Google AI Studio**, bukan Google Cloud Console biasa.");
       }
-
-      updateDiag(`🛠️ **Hasil Diagnosa API (Sukses):**
-✅ **Koneksi Google:** Berhasil terhubung!
-✅ **API Key:** Valid.
-📋 **Daftar Model yang Tersedia di Akun Anda:**
-${models.map(m => `- \`${m}\``).join("\n")}
-
-*Catatan:* Sistem telah memperbarui pilihan model Anda secara otomatis agar kompatibel dengan akun Anda. Sekarang silakan coba ketik pesan obrolan kembali.`);
-    } else {
-      const errMsg = data.error ? data.error.message : "Kesalahan tidak dikenal.";
-      const errCode = data.error ? data.error.code : res.status;
-      const errStatus = data.error ? data.error.status : "N/A";
-
-      updateDiag(`🛠️ **Hasil Diagnosa API (Gagal):**
-❌ **Koneksi Google:** Gagal (HTTP ${res.status})
-❌ **Kode Error:** \`${errCode}\` (${errStatus})
-❌ **Pesan Google:** "${errMsg}"
-
-*Petunjuk:*
-1. Jika pesannya adalah *"API key not valid"*, silakan ketik ulang Kunci API Anda dengan teliti tanpa spasi.
-2. Jika pesannya *"location is not supported"*, berarti server Google memblokir akses dari wilayah/IP Anda.
-3. Pastikan Anda membuat Kunci API melalui portal **Google AI Studio**, bukan Google Cloud Console biasa.`);
-    }
-  } catch (err) {
-    updateDiag(`🛠️ **Hasil Diagnosa API (Gagal):**
-❌ **Koneksi Google:** Gagal terhubung (Network Error)
-❌ **Detail:** "${err.message}"
-
-*Petunjuk:* Pastikan komputer Anda terhubung ke internet dan tidak diblokir oleh antivirus atau ekstensi pemblokir iklan (AdBlocker) di browser.`);
-  }
+    })
+    .catch(function(err) {
+      updateDiag("🛠️ **Hasil Diagnosa API (Gagal):**\n❌ **Koneksi Google:** Gagal terhubung (Network Error)\n❌ **Detail:** \"" + err.message + "\"\n\n*Petunjuk:* Pastikan komputer Anda terhubung ke internet dan tidak diblokir oleh antivirus atau ekstensi pemblokir iklan (AdBlocker) di browser.");
+    });
 }
 
 // --- FASE 2: HELPER FUNCTIONS ---
