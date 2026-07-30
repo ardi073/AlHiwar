@@ -171,12 +171,14 @@ function initAuth() {
   var userJson = localStorage.getItem('sb-user');
   
   if (!token || !userJson) {
-    if (loginOverlay) loginOverlay.style.display = 'flex';
-  } else {
-    try {
-      var user = JSON.parse(userJson);
-      if (loginOverlay) loginOverlay.style.display = 'none';
-      checkPremiumStatus(user.id);
+      if (loginOverlay) loginOverlay.style.display = 'flex';
+      if (elements.logoutBtn) elements.logoutBtn.style.display = 'none';
+    } else {
+      try {
+        var user = JSON.parse(userJson);
+        if (loginOverlay) loginOverlay.style.display = 'none';
+        if (elements.logoutBtn) elements.logoutBtn.style.display = 'inline-block';
+        checkPremiumStatus(user.id);
     } catch(e) {
       if (loginOverlay) loginOverlay.style.display = 'flex';
     }
@@ -221,8 +223,9 @@ if (loginForm) {
         btn.style.background = "var(--success)";
         
         setTimeout(function() {
-          document.getElementById('login-overlay').style.display = 'none';
-          checkPremiumStatus(result.data.user.id);
+            document.getElementById('login-overlay').style.display = 'none';
+            if (elements.logoutBtn) elements.logoutBtn.style.display = 'inline-block';
+            checkPremiumStatus(result.data.user.id);
           
           btn.disabled = false;
           btn.style.opacity = '1';
@@ -243,9 +246,10 @@ if (loginForm) {
 
 // --- DOM ELEMENTS ---
 const elements = {
-  mainContent: document.getElementById("mainContent"),
-  themeToggleBtn: document.getElementById("themeToggleBtn"),
-  themeToggleIcon: document.getElementById("themeToggleIcon"),
+    mainContent: document.getElementById("mainContent"),
+    themeToggleBtn: document.getElementById("themeToggleBtn"),
+    logoutBtn: document.getElementById("logoutBtn"),
+    themeToggleIcon: document.getElementById("themeToggleIcon"),
   progressPercent: document.getElementById("progressPercent"),
   progressBarFill: document.getElementById("progressBarFill"),
   navbar: document.getElementById("appNavbar"),
@@ -402,8 +406,19 @@ function fallbackSpeakArabic(text, onStart = null, onEnd = null) {
 
 // --- EVENT LISTENERS ---
 function setupEventListeners() {
-  // Theme toggle
-  elements.themeToggleBtn.addEventListener("click", toggleTheme);
+    // Theme toggle
+    elements.themeToggleBtn.addEventListener("click", toggleTheme);
+    
+    // Logout
+    if (elements.logoutBtn) {
+      elements.logoutBtn.addEventListener("click", () => {
+        if (confirm("Apakah Anda yakin ingin keluar dari akun?")) {
+          localStorage.removeItem('sb-access-token');
+          localStorage.removeItem('sb-user');
+          window.location.reload();
+        }
+      });
+    }
 
   // Tab navigation
   elements.navbar.addEventListener("click", (e) => {
@@ -1185,15 +1200,12 @@ function filterAndRenderDictionary(query, onlyFavorites = false) {
     paywallCard.style.border = "1px dashed var(--primary-light)";
     paywallCard.style.marginTop = "20px";
     paywallCard.innerHTML = `
-      <i class="bx bxs-lock-alt" style="font-size: 32px; color: var(--primary-color); margin-bottom: 10px;"></i>
+      <i class="bx bxs-lock-alt" style="font-size: 32px; color: #eab308; margin-bottom: 10px;"></i>
       <h3 style="margin-bottom: 5px; color: var(--text-primary);">Akses Terbatas</h3>
-      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">Daftar ini dibatasi 50 kata. Tingkatkan ke Premium untuk membuka ribuan kosakata lainnya!</p>
-      <button class="btn btn-primary" id="dictUpgradeBtn">Buka Akses Premium</button>
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">Akses terbatas untuk anggota premium.</p>
     `;
     
-    paywallCard.querySelector("#dictUpgradeBtn").addEventListener("click", () => {
-      showPremiumPaywall();
-    });
+    // Removed button listener
     
     listContainer.appendChild(paywallCard);
   }
@@ -1229,15 +1241,15 @@ function renderAiView() {
           <option value="madrasah" ${appState.aiScenario === 'madrasah' ? 'selected' : ''}>Di Sekolah</option>
         </optgroup>
         <optgroup label="Premium (SaaS)">
-          <option value="suq" ${appState.aiScenario === 'suq' ? 'selected' : ''}>Di Pasar (Premium)</option>
-          <option value="usrah" ${appState.aiScenario === 'usrah' ? 'selected' : ''}>Keluarga (Premium)</option>
-          <option value="mathar" ${appState.aiScenario === 'mathar' ? 'selected' : ''}>Di Bandara (Premium)</option>
-          <option value="hiwayah" ${appState.aiScenario === 'hiwayah' ? 'selected' : ''}>Hobi (Premium)</option>
-          <option value="mustasyfa" ${appState.aiScenario === 'mustasyfa' ? 'selected' : ''}>Rumah Sakit (Premium)</option>
-          <option value="mihnah" ${appState.aiScenario === 'mihnah' ? 'selected' : ''}>Pekerjaan (Premium)</option>
-          <option value="fushul" ${appState.aiScenario === 'fushul' ? 'selected' : ''}>Cuaca & Musim (Premium)</option>
-          <option value="uthlah" ${appState.aiScenario === 'uthlah' ? 'selected' : ''}>Liburan (Premium)</option>
-          <option value="riyadhah" ${appState.aiScenario === 'riyadhah' ? 'selected' : ''}>Olahraga (Premium)</option>
+          <option value="suq" ${appState.aiScenario === 'suq' ? 'selected' : ''}>Di Pasar \uD83D\uDD12</option>
+          <option value="usrah" ${appState.aiScenario === 'usrah' ? 'selected' : ''}>Keluarga \uD83D\uDD12</option>
+          <option value="mathar" ${appState.aiScenario === 'mathar' ? 'selected' : ''}>Di Bandara \uD83D\uDD12</option>
+          <option value="hiwayah" ${appState.aiScenario === 'hiwayah' ? 'selected' : ''}>Hobi \uD83D\uDD12</option>
+          <option value="mustasyfa" ${appState.aiScenario === 'mustasyfa' ? 'selected' : ''}>Rumah Sakit \uD83D\uDD12</option>
+          <option value="mihnah" ${appState.aiScenario === 'mihnah' ? 'selected' : ''}>Pekerjaan \uD83D\uDD12</option>
+          <option value="fushul" ${appState.aiScenario === 'fushul' ? 'selected' : ''}>Cuaca & Musim \uD83D\uDD12</option>
+          <option value="uthlah" ${appState.aiScenario === 'uthlah' ? 'selected' : ''}>Liburan \uD83D\uDD12</option>
+          <option value="riyadhah" ${appState.aiScenario === 'riyadhah' ? 'selected' : ''}>Olahraga \uD83D\uDD12</option>
         </optgroup>
       </select>
       <button id="inlineClearChatBtn" title="Hapus Riwayat Chat" style="width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--card-border); background: var(--glass-bg); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--error);">
