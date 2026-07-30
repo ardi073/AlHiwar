@@ -148,8 +148,8 @@ function checkPremiumAccess(themeId) {
           
           <div style="display: flex; flex-direction: column; gap: 12px;">
             <div style="background: #f9fafb; border: 1px solid #e5e7eb; padding: 12px; border-radius: 12px; text-align: left; margin-bottom: 12px;">
-              <p style="font-size: 12px; color: #6b7280; margin-bottom: 4px;"><i class='bx bx-info-circle'></i> Pendaftaran akun baru dilakukan via browser:</p>
-              <p style="font-size: 14px; color: #1f2937; font-weight: bold; text-align: center; margin-top: 8px;"><a href="https://member.alhiwar.click" target="_blank" style="color: inherit; text-decoration: none;">member.alhiwar.click</a></p>
+              <p style="font-size: 12px; color: #6b7280; margin-bottom: 4px;"><i class='bx bx-info-circle'></i> Info Akun Premium:</p>
+              <p style="font-size: 14px; color: #1f2937; font-weight: bold; text-align: center; margin-top: 8px;">Silakan masuk menggunakan akun Premium yang sudah Anda miliki.</p>
             </div>
             <button onclick="document.getElementById('login-overlay').style.display='flex'; closePremiumModal()" style="width: 100%; background: #14b8a6; color: white; font-weight: bold; padding: 12px 16px; border-radius: 12px; border: none; cursor: pointer;">
               Sudah punya akun? Masuk
