@@ -305,7 +305,7 @@ function toggleTheme() {
 let currentAudio = null;
 
 // Duplicate async function removed.
-// Text-to-Speech Helper (Refactored to avoid async)
+// Text-to-Speech Helper (Refactored for Language Detection & Natural Voices)
 function speakArabic(text, onStart = null, onEnd = null) {
   return new Promise(function(resolve, reject) {
     if (!('speechSynthesis' in window)) {
@@ -316,9 +316,61 @@ function speakArabic(text, onStart = null, onEnd = null) {
 
     window.speechSynthesis.cancel();
     
+    // 1. Deteksi Bahasa secara otomatis
+    // Jika ada karakter Arab, kita anggap itu bahasa Arab. Jika tidak, bahasa Indonesia.
+    const isArabicText = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
+    
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ar-SA';
-    utterance.rate = 0.85; 
+    
+    // Setel bahasa dan kecepatan dasar
+    utterance.lang = isArabicText ? "ar-SA" : "id-ID";
+    utterance.rate = isArabicText ? 0.85 : 0.95; // Sedikit lebih lambat untuk Arab agar pengucapannya jelas
+    utterance.pitch = 1.0;
+    
+    const voices = window.speechSynthesis.getVoices();
+    let bestVoice = null;
+    
+    // 2. Prioritaskan suara Google / Online Network (Sangat Natural & Tidak Kaku)
+    for (let i = 0; i < voices.length; i++) {
+      const v = voices[i];
+      const matchLang = isArabicText ? (v.lang.startsWith('ar') || v.lang.startsWith('AR')) : (v.lang.startsWith('id') || v.lang.startsWith('ID'));
+      if (matchLang && (v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('online') || v.name.toLowerCase().includes('network'))) {
+        bestVoice = v;
+        break;
+      }
+    }
+    
+    // 3. Jika bahasa Arab, cari suara laki-laki Arab jika Google tidak ditemukan (Maged/Tarik)
+    if (!bestVoice && isArabicText) {
+      for (let i = 0; i < voices.length; i++) {
+        const v = voices[i];
+        if ((v.lang.startsWith("ar") || v.lang.startsWith("AR")) && 
+            (v.name.includes("Maged") || v.name.includes("Tarik") || v.name.includes("Naayf") || v.name.toLowerCase().includes("male"))) {
+          bestVoice = v;
+          break;
+        }
+      }
+    }
+    
+    // 4. Fallback ke suara apapun yang bahasanya cocok (Suara Bawaan Sistem)
+    if (!bestVoice) {
+      for (let i = 0; i < voices.length; i++) {
+        const v = voices[i];
+        const matchLang = isArabicText ? (v.lang.startsWith('ar') || v.lang.startsWith('AR')) : (v.lang.startsWith('id') || v.lang.startsWith('ID'));
+        if (matchLang) {
+          bestVoice = v;
+          break;
+        }
+      }
+    }
+    
+    if (bestVoice) {
+      utterance.voice = bestVoice;
+      // Jika bahasa Arab dan terpilih suara wanita/sistem (bukan pria asli & bukan google), beratkan sedikit pitchnya
+      if (isArabicText && !bestVoice.name.match(/Maged|Tarik|Naayf|male/i) && !bestVoice.name.toLowerCase().includes("google")) {
+        utterance.pitch = 0.75; 
+      }
+    }
 
     if (onStart) utterance.onstart = onStart;
     utterance.onend = function() {
@@ -333,75 +385,6 @@ function speakArabic(text, onStart = null, onEnd = null) {
 
     window.speechSynthesis.speak(utterance);
   });
-}
-
-function fallbackSpeakArabic(text, onStart = null, onEnd = null) {
-  if ("speechSynthesis" in window) {
-    // Batal suara yang sedang berjalan
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "ar-SA";
-    utterance.rate = 0.80; // Diperlambat sedikit agar terdengar lebih luwes (seperti Ustadz)
-    
-    const voices = window.speechSynthesis.getVoices();
-    
-    // 1. Prioritaskan suara laki-laki Arab yang dikenal (Mac/iOS: Maged, Tarik | Windows: Naayf)
-    let arVoice = voices.find(voice => 
-      (voice.lang.startsWith("ar") || voice.lang.startsWith("AR")) && 
-      (voice.name.includes("Maged") || voice.name.includes("Tarik") || voice.name.includes("Naayf") || voice.name.toLowerCase().includes("male"))
-    );
-
-    // 2. Jika tidak ada suara laki-laki, ambil suara Arab apa saja (biasanya Google TTS Female di Android)
-    if (!arVoice) {
-      arVoice = voices.find(voice => voice.lang.startsWith("ar") || voice.lang.startsWith("AR"));
-    }
-
-    if (arVoice) {
-      utterance.voice = arVoice;
-      
-      // Jika suara yang terpilih BUKAN suara laki-laki asli (kemungkinan suara wanita), 
-      // kita turunkan nadanya (pitch) agar terdengar lebih berat seperti laki-laki.
-      if (!arVoice.name.match(/Maged|Tarik|Naayf|male/i)) {
-        utterance.pitch = 0.65; // Nada berat (palsu laki-laki)
-      } else {
-        utterance.pitch = 0.95; // Nada asli laki-laki
-      }
-    } else if (voices.length > 0) {
-      console.warn("Suara Bahasa Arab (ar-SA) tidak terdeteksi.");
-      showToast("Suara Arab tidak ditemukan di sistem. Mencoba default browser.", "warning");
-      utterance.pitch = 0.8;
-    } else {
-      console.warn("Daftar suara browser kosong. Mencoba memutar...");
-      utterance.pitch = 0.8;
-    }
-
-    utterance.onstart = () => {
-      if (onStart) onStart();
-    };
-
-    utterance.onend = () => {
-      if (onEnd) onEnd();
-    };
-
-    utterance.onerror = (event) => {
-      if (onEnd) onEnd();
-      console.error("Kesalahan SpeechSynthesis:", event);
-      if (event.error === "language-unavailable") {
-        showToast("Gagal: Paket suara Bahasa Arab tidak terpasang di sistem operasi Anda.", "error");
-      } else if (event.error === "network") {
-        showToast("Gagal: Membutuhkan koneksi internet untuk mengunduh suara online browser.", "error");
-      } else if (event.error === "not-allowed") {
-        showToast("Gagal: Interaksi pengguna diperlukan sebelum memutar suara.", "error");
-      } else {
-        showToast(`Kesalahan suara: ${event.error}`, "error");
-      }
-    };
-
-    window.speechSynthesis.speak(utterance);
-  } else {
-    showToast("Browser Anda tidak mendukung Sintesis Suara.", "error");
-  }
 }
 
 // --- EVENT LISTENERS ---
