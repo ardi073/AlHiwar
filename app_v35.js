@@ -131,7 +131,6 @@ function checkPremiumAccess(themeId) {
     if (appState.isPremium) return true;
     if (FREE_THEME_IDS.includes(themeId)) return true;
     
-    showPremiumPaywall();
     return false;
   }
   
