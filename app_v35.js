@@ -128,42 +128,53 @@ const FREE_THEME_IDS = ["taaruf", "matham", "madrasah"];
 
 // Premium Access Check
 function checkPremiumAccess(themeId) {
-  if (appState.isPremium) return true;
-  if (FREE_THEME_IDS.includes(themeId)) return true;
+    if (appState.isPremium) return true;
+    if (FREE_THEME_IDS.includes(themeId)) return true;
+    
+    showPremiumPaywall();
+    return false;
+  }
   
-  const modal = document.getElementById("premiumModal");
-  modal.innerHTML = `
-    <div class="glass-panel text-center max-w-sm w-full mx-4 relative">
-      <div class="text-4xl text-amber-500 mb-4"><i class='bx bxs-crown'></i></div>
-      <h3 class="text-xl font-bold mb-2">Fitur Premium</h3>
-      <p class="text-gray-600 mb-6 text-sm">Gembok fitur ini hanya bisa dibuka oleh pengguna yang berlangganan Premium di Website Al-Hiwar.</p>
-      
-      <div class="space-y-3">
-        <div class="bg-gray-50 border border-gray-200 p-3 rounded-xl mb-3 text-left">
-          <p class="text-xs text-gray-500 mb-1"><i class='bx bx-info-circle'></i> Pendaftaran akun baru dilakukan via browser:</p>
-          <p class="text-sm text-gray-800 font-bold text-center mt-2"><a href="https://member.alhiwar.click" target="_blank" style="color: inherit; text-decoration: none;">member.alhiwar.click</a></p>
+  function showPremiumPaywall() {
+    const overlay = document.getElementById("premiumModalOverlay");
+    if (overlay) overlay.style.display = "flex";
+    
+    const modal = document.getElementById("premiumModal");
+    if (modal) {
+      modal.innerHTML = `
+        <div class="glass-panel text-center max-w-sm w-full mx-4 relative" style="background: white; border-radius: 20px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+          <div style="font-size: 48px; color: #f59e0b; margin-bottom: 16px;"><i class='bx bxs-crown'></i></div>
+          <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 8px; color: #1f2937;">Fitur Premium</h3>
+          <p style="color: #4b5563; margin-bottom: 24px; font-size: 14px;">Gembok fitur ini hanya bisa dibuka oleh pengguna yang berlangganan Premium di Website Al-Hiwar.</p>
+          
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="background: #f9fafb; border: 1px solid #e5e7eb; padding: 12px; border-radius: 12px; text-align: left; margin-bottom: 12px;">
+              <p style="font-size: 12px; color: #6b7280; margin-bottom: 4px;"><i class='bx bx-info-circle'></i> Pendaftaran akun baru dilakukan via browser:</p>
+              <p style="font-size: 14px; color: #1f2937; font-weight: bold; text-align: center; margin-top: 8px;"><a href="https://member.alhiwar.click" target="_blank" style="color: inherit; text-decoration: none;">member.alhiwar.click</a></p>
+            </div>
+            <button onclick="document.getElementById('login-overlay').style.display='flex'; closePremiumModal()" style="width: 100%; background: #14b8a6; color: white; font-weight: bold; padding: 12px 16px; border-radius: 12px; border: none; cursor: pointer;">
+              Sudah punya akun? Masuk
+            </button>
+            <button onclick="closePremiumModal()" style="width: 100%; background: #f3f4f6; color: #374151; font-weight: bold; padding: 12px 16px; border-radius: 12px; border: none; cursor: pointer;">
+              Tutup
+            </button>
+          </div>
         </div>
-        <button onclick="document.getElementById('login-overlay').style.display='flex'; closePremiumModal()" class="w-full bg-teal-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-teal-600 transition-all">
-          Sudah punya akun? Masuk
-        </button>
-        <button onclick="closePremiumModal()" class="w-full bg-gray-100 text-gray-700 font-bold py-3 px-4 rounded-xl hover:bg-gray-200 transition-all">
-          Tutup
-        </button>
-      </div>
-    </div>
-  `;
+      `;
+      modal.classList.add("active");
+    }
+  }
   
-  modal.classList.add("active");
-  return false;
-}
-
-function closePremiumModal() {
-  document.getElementById("premiumModal").classList.remove("active");
-}
+  function closePremiumModal() {
+    const overlay = document.getElementById("premiumModalOverlay");
+    if (overlay) overlay.style.display = "none";
+    const modal = document.getElementById("premiumModal");
+    if (modal) modal.classList.remove("active");
+  }
 
 // // ==========================================
 // SUPABASE AUTH & INIT (Refactored to Promises for old WebViews)
-// ==========================================
+// // ==========================================
 function initAuth() {
   const loginOverlay = document.getElementById('login-overlay');
   
