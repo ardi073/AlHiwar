@@ -1220,9 +1220,16 @@ function filterAndRenderDictionary(query, onlyFavorites = false) {
 
 // --- 5. TUTOR AI VIEW ---
 function renderAiView() {
-  elements.mainContent.innerHTML = "";
-
-  const layout = document.createElement("div");
+    elements.mainContent.innerHTML = "";
+    
+    // VERIFIKASI SAAT MEMUAT: Cegah akses jika tersimpan skenario premium tapi pengguna bukan premium
+    const premiumScenarios = ["suq", "usrah", "mathar", "hiwayah", "mustasyfa", "mihnah", "fushul", "uthlah", "riyadhah"];
+    if (premiumScenarios.includes(appState.aiScenario) && !appState.isPremium) {
+      appState.aiScenario = "taaruf";
+      appStorage.setItem("aiScenario", "taaruf");
+    }
+  
+    const layout = document.createElement("div");
   layout.className = "ai-layout new-design animate-fade-in";
 
   const isApiActive = appState.geminiApiKey && appState.geminiApiKey.length > 10;
