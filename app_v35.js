@@ -317,7 +317,6 @@ function speakArabic(text, onStart = null, onEnd = null) {
     window.speechSynthesis.cancel();
     
     // 1. Deteksi Bahasa secara otomatis
-    // Jika ada karakter Arab, kita anggap itu bahasa Arab. Jika tidak, bahasa Indonesia.
     const isArabicText = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
     
     const utterance = new SpeechSynthesisUtterance(text);
@@ -325,34 +324,43 @@ function speakArabic(text, onStart = null, onEnd = null) {
     // Setel bahasa dan kecepatan dasar
     utterance.lang = isArabicText ? "ar-SA" : "id-ID";
     utterance.rate = isArabicText ? 0.85 : 0.95; // Sedikit lebih lambat untuk Arab agar pengucapannya jelas
-    utterance.pitch = 1.0;
     
     const voices = window.speechSynthesis.getVoices();
     let bestVoice = null;
     
-    // 2. Prioritaskan suara Google / Online Network (Sangat Natural & Tidak Kaku)
+    // Kata kunci untuk mendeteksi suara pria di berbagai platform (Android, iOS, Windows)
+    // Pada Google TTS, voice berakhiran -b, -c, -d umumnya adalah pria. Voice -a adalah wanita.
+    const maleKeywords = ['male', 'maged', 'tarik', 'naayf', 'andika', 'wavenet-b', 'wavenet-c', 'wavenet-d', 'standard-b', 'standard-c', 'standard-d', '-b', '-c', '-d'];
+    const isMaleVoice = function(vName) {
+      const name = vName.toLowerCase();
+      return maleKeywords.some(function(kw) { return name.includes(kw); }) && !name.includes('female') && !name.includes('-a');
+    };
+    
+    // 2. Prioritaskan suara Pria (Male) yang Natural (Google/Online Network)
     for (let i = 0; i < voices.length; i++) {
       const v = voices[i];
       const matchLang = isArabicText ? (v.lang.startsWith('ar') || v.lang.startsWith('AR')) : (v.lang.startsWith('id') || v.lang.startsWith('ID'));
-      if (matchLang && (v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('online') || v.name.toLowerCase().includes('network'))) {
-        bestVoice = v;
-        break;
+      if (matchLang && isMaleVoice(v.name)) {
+        // Jika ketemu suara pria, utamakan yang dari Google/Online
+        if (!bestVoice || v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('online') || v.name.toLowerCase().includes('network')) {
+          bestVoice = v;
+        }
       }
     }
     
-    // 3. Jika bahasa Arab, cari suara laki-laki Arab jika Google tidak ditemukan (Maged/Tarik)
-    if (!bestVoice && isArabicText) {
+    // 3. Jika tidak ada suara pria sama sekali, ambil suara natural (Google/Online) apa saja
+    if (!bestVoice) {
       for (let i = 0; i < voices.length; i++) {
         const v = voices[i];
-        if ((v.lang.startsWith("ar") || v.lang.startsWith("AR")) && 
-            (v.name.includes("Maged") || v.name.includes("Tarik") || v.name.includes("Naayf") || v.name.toLowerCase().includes("male"))) {
+        const matchLang = isArabicText ? (v.lang.startsWith('ar') || v.lang.startsWith('AR')) : (v.lang.startsWith('id') || v.lang.startsWith('ID'));
+        if (matchLang && (v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('online') || v.name.toLowerCase().includes('network'))) {
           bestVoice = v;
           break;
         }
       }
     }
     
-    // 4. Fallback ke suara apapun yang bahasanya cocok (Suara Bawaan Sistem)
+    // 4. Fallback terakhir: Ambil suara bawaan sistem apa saja yang bahasanya cocok
     if (!bestVoice) {
       for (let i = 0; i < voices.length; i++) {
         const v = voices[i];
@@ -366,10 +374,15 @@ function speakArabic(text, onStart = null, onEnd = null) {
     
     if (bestVoice) {
       utterance.voice = bestVoice;
-      // Jika bahasa Arab dan terpilih suara wanita/sistem (bukan pria asli & bukan google), beratkan sedikit pitchnya
-      if (isArabicText && !bestVoice.name.match(/Maged|Tarik|Naayf|male/i) && !bestVoice.name.toLowerCase().includes("google")) {
-        utterance.pitch = 0.75; 
+      // JURUS TERAKHIR: Jika terpaksa menggunakan suara wanita (karena suara pria tidak terinstal di HP),
+      // kita "paksa" suara tersebut menjadi berat (menyerupai laki-laki) dengan menurunkan nadanya secara drastis.
+      if (!isMaleVoice(bestVoice.name)) {
+        utterance.pitch = 0.60; // Pitch rendah (Bass / Berat)
+      } else {
+        utterance.pitch = 1.0; // Suara pria asli, biarkan normal
       }
+    } else {
+      utterance.pitch = 0.60; // Default juga direndahkan untuk jaga-jaga
     }
 
     if (onStart) utterance.onstart = onStart;
