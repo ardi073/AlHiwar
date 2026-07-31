@@ -493,6 +493,12 @@ function completeTheme(themeId) {
 function renderActiveTab() {
   elements.mainContent.innerHTML = "";
 
+  if (appState.activeTab === "ai") {
+      document.body.classList.add("ai-fullscreen-mode");
+  } else {
+      document.body.classList.remove("ai-fullscreen-mode");
+  }
+
   switch (appState.activeTab) {
     case "dashboard":
       renderDashboardView();
@@ -1388,7 +1394,118 @@ function renderAiView() {
     sendWelcomeMessage(chatHistory);
   }
 
-  // --- WIRING LISTENERS ---
+    layout.className = "ai-fullscreen-layout animate-fade-in";
+  
+    const isApiActive = appState.geminiApiKey && appState.geminiApiKey.length > 10;
+  
+    // Top Bar
+    const topBar = document.createElement("div");
+    topBar.className = "ai-top-bar";
+    topBar.innerHTML = `
+      <button class="ai-icon-btn" id="aiCloseBtn" aria-label="Tutup"><i class='bx bx-chevron-down'></i></button>
+      <div style="display: flex; gap: 10px;">
+        <select id="inlineScenarioSelect" style="padding: 5px 15px; border-radius: 20px; border: 1px solid var(--glass-border); background: var(--glass-bg); font-weight: bold; color: var(--text-primary); outline: none;">
+          <optgroup label="Gratis (Trial)">
+            <option value="taaruf" ${appState.aiScenario === 'taaruf' ? 'selected' : ''}>Perkenalan</option>
+            <option value="matham" ${appState.aiScenario === 'matham' ? 'selected' : ''}>Di Restoran</option>
+            <option value="madrasah" ${appState.aiScenario === 'madrasah' ? 'selected' : ''}>Di Sekolah</option>
+          </optgroup>
+          <optgroup label="Premium (SaaS)">
+            <option value="suq" ${appState.aiScenario === 'suq' ? 'selected' : ''}>Di Pasar 🔒</option>
+            <option value="usrah" ${appState.aiScenario === 'usrah' ? 'selected' : ''}>Keluarga 🔒</option>
+            <option value="mathar" ${appState.aiScenario === 'mathar' ? 'selected' : ''}>Di Bandara 🔒</option>
+            <option value="hiwayah" ${appState.aiScenario === 'hiwayah' ? 'selected' : ''}>Hobi 🔒</option>
+            <option value="mustasyfa" ${appState.aiScenario === 'mustasyfa' ? 'selected' : ''}>Rumah Sakit 🔒</option>
+            <option value="mihnah" ${appState.aiScenario === 'mihnah' ? 'selected' : ''}>Pekerjaan 🔒</option>
+            <option value="fushul" ${appState.aiScenario === 'fushul' ? 'selected' : ''}>Cuaca 🔒</option>
+            <option value="uthlah" ${appState.aiScenario === 'uthlah' ? 'selected' : ''}>Liburan 🔒</option>
+            <option value="riyadhah" ${appState.aiScenario === 'riyadhah' ? 'selected' : ''}>Olahraga 🔒</option>
+          </optgroup>
+        </select>
+        <button class="ai-icon-btn" id="inlineClearChatBtn" aria-label="Hapus Riwayat" style="color: #ef4444;"><i class='bx bx-trash'></i></button>
+      </div>
+    `;
+  
+    // Avatar Area
+    const avatarArea = document.createElement("div");
+    avatarArea.className = "ai-avatar-container";
+    avatarArea.id = "aiAvatarContainer";
+    avatarArea.innerHTML = `
+      <img src="ustadz_avatar.png" alt="Ustadz AI" class="ai-avatar-img">
+    `;
+  
+    // Chat Overlay Area
+    const chatOverlay = document.createElement("div");
+    chatOverlay.className = "ai-chat-overlay";
+    chatOverlay.id = "chatHistoryContainer";
+  
+    // Typing Indicator
+    const typingIndicator = document.createElement("div");
+    typingIndicator.className = "typing-indicator";
+    typingIndicator.id = "aiTypingIndicator";
+    typingIndicator.style.display = "none";
+    typingIndicator.style.alignSelf = "flex-start";
+    typingIndicator.style.marginLeft = "20px";
+    typingIndicator.style.marginBottom = "15px";
+    typingIndicator.innerHTML = `<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>`;
+  
+    // Bottom Mic Controls
+    const bottomControls = document.createElement("div");
+    bottomControls.className = "ai-bottom-controls";
+    
+    // We use a hidden input for the old logic that might depend on it
+    const hiddenInput = document.createElement("input");
+    hiddenInput.type = "hidden";
+    hiddenInput.id = "chatInputField";
+    
+    const micBtnId = document.createElement("button");
+    micBtnId.className = "ai-mic-btn";
+    micBtnId.id = "voiceInputIdBtn";
+    micBtnId.innerHTML = `<i class='bx bx-microphone'></i>`;
+  
+    const micBtnAr = document.createElement("button");
+    micBtnAr.className = "ai-suggestion-btn";
+    micBtnAr.id = "voiceInputArBtn";
+    micBtnAr.innerHTML = `<i class='bx bx-microphone'></i> Arab`;
+  
+    bottomControls.appendChild(hiddenInput);
+    bottomControls.appendChild(micBtnId);
+    bottomControls.appendChild(micBtnAr);
+  
+    layout.appendChild(topBar);
+    layout.appendChild(avatarArea);
+    layout.appendChild(chatOverlay);
+    layout.appendChild(typingIndicator);
+    layout.appendChild(bottomControls);
+    
+    elements.mainContent.appendChild(layout);
+  
+    // References
+    const chatHistory = layout.querySelector("#chatHistoryContainer");
+    const typingInd = layout.querySelector("#aiTypingIndicator");
+    const chatInput = layout.querySelector("#chatInputField");
+    const voiceId = layout.querySelector("#voiceInputIdBtn");
+    const voiceAr = layout.querySelector("#voiceInputArBtn");
+    const scenarioSelect = layout.querySelector("#inlineScenarioSelect");
+    const clearChatBtn = layout.querySelector("#inlineClearChatBtn");
+    const closeBtn = layout.querySelector("#aiCloseBtn");
+  
+    // Render current chat history
+    renderChatHistory(chatHistory);
+  
+    // Set default welcome message if history is empty
+    if (appState.aiChatHistory.length === 0) {
+      sendWelcomeMessage(chatHistory);
+    }
+  
+    // --- WIRING LISTENERS ---
+    
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => {
+        appState.activeTab = "dashboard";
+        renderActiveTab();
+      });
+    }
 
   // 1. Scenario Switch
   if (scenarioSelect) {
@@ -2607,4 +2724,6 @@ function renderNahwuChapter(container, chapter) {
 
   container.appendChild(completeBtn);
 }
+
+
 
