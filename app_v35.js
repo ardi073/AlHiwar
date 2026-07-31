@@ -1,11 +1,3 @@
-const oldErr = console.error;
-console.error = function(...args) {
-  alert("CONSOLE ERROR: " + args.join(' '));
-  oldErr.apply(console, args);
-};
-window.onerror = function(msg, url, line, col, err) {
-  alert("RUNTIME ERROR: " + msg + " di baris " + line);
-};
 // --- DATA MATERI PEMBELAJARAN (DATABASE) ---
 let learningData = { themes: [] };
 let globalDictionary = [];
@@ -20,51 +12,17 @@ try {
   console.error("Gagal memuat data pembelajaran:", e);
 }
 
+// Konfigurasi Supabase
 const supabaseUrl = 'https://cjwufugmuhzbvmbixjyx.supabase.co';
 const supabaseKey = 'sb_publishable_L_Ds2zgmc_vK8Unkb-mB4A_cU6BDGEY';
-
-// CUSTOM REST API CLIENT UNTUK HP LAWAS
-const supabaseClient = {
-  request: function(method, endpoint, body) {
-    return new Promise(function(resolve, reject) {
-      var xhr = new XMLHttpRequest();
-      xhr.open(method, supabaseUrl + endpoint, true);
-      xhr.setRequestHeader('apikey', supabaseKey);
-      
-      var token = localStorage.getItem('sb-access-token');
-      if (token) {
-        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-      }
-      
-      if (body) {
-        xhr.setRequestHeader('Content-Type', 'application/json');
-      }
-      
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-          var response;
-          try {
-            response = JSON.parse(xhr.responseText);
-          } catch(e) {
-            response = xhr.responseText;
-          }
-          
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve({ data: response, error: null });
-          } else {
-            reject({ message: response.error_description || response.msg || "Terjadi kesalahan server." });
-          }
-        }
-      };
-      
-      xhr.onerror = function() {
-        reject({ message: "Network Error: Tidak bisa terhubung ke server." });
-      };
-      
-      xhr.send(body ? JSON.stringify(body) : null);
-    });
+let supabase = null;
+if (window.supabase) {
+  try {
+    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+  } catch (err) {
+    console.error("Gagal menginisialisasi Supabase:", err);
   }
-};
+}
 
 const appStorage = {
   memory: {},
@@ -136,78 +94,73 @@ const FREE_THEME_IDS = ["taaruf", "matham", "madrasah"];
 
 // Premium Access Check
 function checkPremiumAccess(themeId) {
-    if (appState.isPremium) return true;
-    if (FREE_THEME_IDS.includes(themeId)) return true;
-    
-    return false;
-  }
+  if (appState.isPremium) return true;
+  if (FREE_THEME_IDS.includes(themeId)) return true;
   
-  function showPremiumPaywall() {
-    const overlay = document.getElementById("premiumModalOverlay");
-    if (overlay) overlay.style.display = "flex";
-    
-    const modal = document.getElementById("premiumModal");
-    if (modal) {
-      modal.innerHTML = `
-        <div class="glass-panel text-center max-w-sm w-full mx-4 relative" style="background: white; border-radius: 20px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
-          <div style="font-size: 48px; color: #f59e0b; margin-bottom: 16px;"><i class='bx bxs-crown'></i></div>
-          <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 8px; color: #1f2937;">Fitur Premium</h3>
-          <p style="color: #4b5563; margin-bottom: 24px; font-size: 14px;">Gembok fitur ini hanya bisa dibuka oleh pengguna yang berlangganan Premium di Website Al-Hiwar.</p>
-          
-          <div style="display: flex; flex-direction: column; gap: 12px;">
-            <div style="background: #f9fafb; border: 1px solid #e5e7eb; padding: 12px; border-radius: 12px; text-align: left; margin-bottom: 12px;">
-              <p style="font-size: 12px; color: #6b7280; margin-bottom: 4px;"><i class='bx bx-info-circle'></i> Info Akun Premium:</p>
-              <p style="font-size: 14px; color: #1f2937; font-weight: bold; text-align: center; margin-top: 8px;">Silakan masuk menggunakan akun Premium yang sudah Anda miliki.</p>
-            </div>
-            <button onclick="document.getElementById('login-overlay').style.display='flex'; closePremiumModal()" style="width: 100%; background: #14b8a6; color: white; font-weight: bold; padding: 12px 16px; border-radius: 12px; border: none; cursor: pointer;">
-              Sudah punya akun? Masuk
-            </button>
-            <button onclick="closePremiumModal()" style="width: 100%; background: #f3f4f6; color: #374151; font-weight: bold; padding: 12px 16px; border-radius: 12px; border: none; cursor: pointer;">
-              Tutup
-            </button>
-          </div>
+  const modal = document.getElementById("premiumModal");
+  modal.innerHTML = `
+    <div class="glass-panel text-center max-w-sm w-full mx-4 relative">
+      <div class="text-4xl text-amber-500 mb-4"><i class='bx bxs-crown'></i></div>
+      <h3 class="text-xl font-bold mb-2">Fitur Premium</h3>
+      <p class="text-gray-600 mb-6 text-sm">Gembok fitur ini hanya bisa dibuka oleh pengguna yang berlangganan Premium di Website Al-Hiwar.</p>
+      
+      <div class="space-y-3">
+        <div class="bg-gray-50 border border-gray-200 p-3 rounded-xl mb-3 text-left">
+          <p class="text-xs text-gray-500 mb-1"><i class='bx bx-info-circle'></i> Pendaftaran akun baru dilakukan via browser:</p>
+          <p class="text-sm text-gray-800 font-bold text-center mt-2">member.alhiwar.click</p>
         </div>
-      `;
-      modal.classList.add("active");
-    }
-  }
+        <button onclick="closePremiumModal()" class="w-full bg-gray-100 text-gray-700 font-bold py-3 px-4 rounded-xl hover:bg-gray-200 transition-all">
+          Tutup
+        </button>
+      </div>
+    </div>
+  `;
   
-  function closePremiumModal() {
-    const overlay = document.getElementById("premiumModalOverlay");
-    if (overlay) overlay.style.display = "none";
-    const modal = document.getElementById("premiumModal");
-    if (modal) modal.classList.remove("active");
-  }
+  modal.classList.add("active");
+  return false;
+}
+
+function closePremiumModal() {
+  document.getElementById("premiumModal").classList.remove("active");
+}
 
 // // ==========================================
 // SUPABASE AUTH & INIT (Refactored to Promises for old WebViews)
-// // ==========================================
+// ==========================================
 function initAuth() {
   const loginOverlay = document.getElementById('login-overlay');
   
-  var token = localStorage.getItem('sb-access-token');
-  var userJson = localStorage.getItem('sb-user');
-  
-  if (!token || !userJson) {
-      if (loginOverlay) loginOverlay.style.display = 'flex';
-      if (elements.logoutBtn) elements.logoutBtn.style.display = 'none';
-    } else {
-      try {
-        var user = JSON.parse(userJson);
-        if (loginOverlay) loginOverlay.style.display = 'none';
-        if (elements.logoutBtn) elements.logoutBtn.style.display = 'inline-block';
-        checkPremiumStatus(user.id);
-    } catch(e) {
-      if (loginOverlay) loginOverlay.style.display = 'flex';
-    }
+  if (!supabase) {
+    console.error("Supabase belum terinisialisasi.");
+    if (loginOverlay) loginOverlay.style.display = 'flex';
+    document.getElementById('login-alert').innerHTML = "Koneksi ke server gagal. Harap refresh halaman atau matikan AdBlocker.";
+    document.getElementById('login-alert').style.display = 'block';
+    return;
   }
+
+  supabase.auth.getSession().then(function(result) {
+    const session = result.data.session;
+    if (!session) {
+      if (loginOverlay) loginOverlay.style.display = 'flex';
+    } else {
+      if (loginOverlay) loginOverlay.style.display = 'none';
+      checkPremiumStatus(session.user.id);
+    }
+  }).catch(function(err) {
+    console.error("Error mengambil sesi:", err);
+    if (loginOverlay) loginOverlay.style.display = 'flex';
+  });
 }
 
 function checkPremiumStatus(userId) {
-  supabaseClient.request('GET', '/rest/v1/users_premium?id=eq.' + userId + '&select=is_premium', null)
+  supabase
+    .from('users_premium')
+    .select('is_premium')
+    .eq('id', userId)
+    .single()
     .then(function(result) {
-      if (result.data && result.data.length > 0) {
-        appState.isPremium = result.data[0].is_premium;
+      if (result.data) {
+        appState.isPremium = result.data.is_premium;
       }
     })
     .catch(function(err) {
@@ -231,19 +184,26 @@ if (loginForm) {
     btn.style.opacity = '0.7';
     txt.innerHTML = "<i class='bx bx-loader-alt bx-spin' style='margin-right:8px;'></i> Memproses...";
     
-    supabaseClient.request('POST', '/auth/v1/token?grant_type=password', { email: email, password: password })
+    if (!supabase) {
+      alertBox.innerHTML = "Sistem login diblokir oleh HP Anda. Harap matikan AdBlocker atau gunakan browser standar.";
+      alertBox.style.display = 'block';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      txt.innerHTML = "Masuk Sekarang";
+      return;
+    }
+
+    supabase.auth.signInWithPassword({ email: email, password: password })
       .then(function(result) {
-        localStorage.setItem('sb-access-token', result.data.access_token);
-        localStorage.setItem('sb-user', JSON.stringify(result.data.user));
+        if (result.error) throw result.error;
         
         alertBox.style.display = 'none';
         txt.innerHTML = "<i class='bx bx-check'></i> Berhasil Masuk!";
         btn.style.background = "var(--success)";
         
         setTimeout(function() {
-            document.getElementById('login-overlay').style.display = 'none';
-            if (elements.logoutBtn) elements.logoutBtn.style.display = 'inline-block';
-            checkPremiumStatus(result.data.user.id);
+          document.getElementById('login-overlay').style.display = 'none';
+          checkPremiumStatus(result.data.user.id);
           
           btn.disabled = false;
           btn.style.opacity = '1';
@@ -264,10 +224,9 @@ if (loginForm) {
 
 // --- DOM ELEMENTS ---
 const elements = {
-    mainContent: document.getElementById("mainContent"),
-    themeToggleBtn: document.getElementById("themeToggleBtn"),
-    logoutBtn: document.getElementById("logoutBtn"),
-    themeToggleIcon: document.getElementById("themeToggleIcon"),
+  mainContent: document.getElementById("mainContent"),
+  themeToggleBtn: document.getElementById("themeToggleBtn"),
+  themeToggleIcon: document.getElementById("themeToggleIcon"),
   progressPercent: document.getElementById("progressPercent"),
   progressBarFill: document.getElementById("progressBarFill"),
   navbar: document.getElementById("appNavbar"),
@@ -322,8 +281,50 @@ function toggleTheme() {
 // --- AUDIO UTILITIES (TTS) ---
 let currentAudio = null;
 
-// Duplicate async function removed.
-// Text-to-Speech Helper (Refactored for Language Detection & Natural Voices)
+async function speakArabic(text, onStart = null, onEnd = null) {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+
+  try {
+    showToast("Memuat suara...", "info"); // Added Loading Toast
+    if (onStart) onStart(); // Memicu animasi UI
+    const response = await fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+
+    if (!response.ok) {
+      console.warn("ElevenLabs TTS gagal (mungkin kuota habis), kembali menggunakan suara sistem...");
+      fallbackSpeakArabic(text, null, onEnd); // onStart sudah dipanggil
+      return;
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    currentAudio = new Audio(url);
+    
+    currentAudio.onended = () => {
+      if (onEnd) onEnd();
+      URL.revokeObjectURL(url);
+    };
+    currentAudio.onerror = () => {
+      console.warn("Gagal memutar audio MP3, kembali menggunakan suara sistem...");
+      fallbackSpeakArabic(text, null, onEnd);
+    };
+    
+    currentAudio.play().catch(err => {
+      console.warn("Pemutaran otomatis diblokir browser:", err);
+      fallbackSpeakArabic(text, null, onEnd);
+    });
+
+  } catch (err) {
+    console.error("Koneksi ke backend TTS gagal:", err);
+    fallbackSpeakArabic(text, null, onEnd);
+  }
+// Text-to-Speech Helper (Refactored to avoid async)
 function speakArabic(text, onStart = null, onEnd = null) {
   return new Promise(function(resolve, reject) {
     if (!('speechSynthesis' in window)) {
@@ -334,74 +335,9 @@ function speakArabic(text, onStart = null, onEnd = null) {
 
     window.speechSynthesis.cancel();
     
-    // 1. Deteksi Bahasa secara otomatis
-    const isArabicText = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
-    
     const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Setel bahasa dan kecepatan dasar
-    utterance.lang = isArabicText ? "ar-SA" : "id-ID";
-    utterance.rate = isArabicText ? 0.85 : 0.95; // Sedikit lebih lambat untuk Arab agar pengucapannya jelas
-    
-    const voices = window.speechSynthesis.getVoices();
-    let bestVoice = null;
-    
-    // Kata kunci untuk mendeteksi suara pria di berbagai platform (Android, iOS, Windows)
-    // Pada Google TTS, voice berakhiran -b, -c, -d umumnya adalah pria. Voice -a adalah wanita.
-    const maleKeywords = ['male', 'maged', 'tarik', 'naayf', 'andika', 'wavenet-b', 'wavenet-c', 'wavenet-d', 'standard-b', 'standard-c', 'standard-d', '-b', '-c', '-d'];
-    const isMaleVoice = function(vName) {
-      const name = vName.toLowerCase();
-      return maleKeywords.some(function(kw) { return name.includes(kw); }) && !name.includes('female') && !name.includes('-a');
-    };
-    
-    // 2. Prioritaskan suara Pria (Male) yang Natural (Google/Online Network)
-    for (let i = 0; i < voices.length; i++) {
-      const v = voices[i];
-      const matchLang = isArabicText ? (v.lang.startsWith('ar') || v.lang.startsWith('AR')) : (v.lang.startsWith('id') || v.lang.startsWith('ID'));
-      if (matchLang && isMaleVoice(v.name)) {
-        // Jika ketemu suara pria, utamakan yang dari Google/Online
-        if (!bestVoice || v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('online') || v.name.toLowerCase().includes('network')) {
-          bestVoice = v;
-        }
-      }
-    }
-    
-    // 3. Jika tidak ada suara pria sama sekali, ambil suara natural (Google/Online) apa saja
-    if (!bestVoice) {
-      for (let i = 0; i < voices.length; i++) {
-        const v = voices[i];
-        const matchLang = isArabicText ? (v.lang.startsWith('ar') || v.lang.startsWith('AR')) : (v.lang.startsWith('id') || v.lang.startsWith('ID'));
-        if (matchLang && (v.name.toLowerCase().includes('google') || v.name.toLowerCase().includes('online') || v.name.toLowerCase().includes('network'))) {
-          bestVoice = v;
-          break;
-        }
-      }
-    }
-    
-    // 4. Fallback terakhir: Ambil suara bawaan sistem apa saja yang bahasanya cocok
-    if (!bestVoice) {
-      for (let i = 0; i < voices.length; i++) {
-        const v = voices[i];
-        const matchLang = isArabicText ? (v.lang.startsWith('ar') || v.lang.startsWith('AR')) : (v.lang.startsWith('id') || v.lang.startsWith('ID'));
-        if (matchLang) {
-          bestVoice = v;
-          break;
-        }
-      }
-    }
-    
-    if (bestVoice) {
-      utterance.voice = bestVoice;
-      // JURUS TERAKHIR: Jika terpaksa menggunakan suara wanita (karena suara pria tidak terinstal di HP),
-      // kita "paksa" suara tersebut menjadi berat (menyerupai laki-laki) dengan menurunkan nadanya secara drastis.
-      if (!isMaleVoice(bestVoice.name)) {
-        utterance.pitch = 0.60; // Pitch rendah (Bass / Berat)
-      } else {
-        utterance.pitch = 1.0; // Suara pria asli, biarkan normal
-      }
-    } else {
-      utterance.pitch = 0.60; // Default juga direndahkan untuk jaga-jaga
-    }
+    utterance.lang = 'ar-SA';
+    utterance.rate = 0.85; 
 
     if (onStart) utterance.onstart = onStart;
     utterance.onend = function() {
@@ -418,21 +354,79 @@ function speakArabic(text, onStart = null, onEnd = null) {
   });
 }
 
+function fallbackSpeakArabic(text, onStart = null, onEnd = null) {
+  if ("speechSynthesis" in window) {
+    // Batal suara yang sedang berjalan
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "ar-SA";
+    utterance.rate = 0.80; // Diperlambat sedikit agar terdengar lebih luwes (seperti Ustadz)
+    
+    const voices = window.speechSynthesis.getVoices();
+    
+    // 1. Prioritaskan suara laki-laki Arab yang dikenal (Mac/iOS: Maged, Tarik | Windows: Naayf)
+    let arVoice = voices.find(voice => 
+      (voice.lang.startsWith("ar") || voice.lang.startsWith("AR")) && 
+      (voice.name.includes("Maged") || voice.name.includes("Tarik") || voice.name.includes("Naayf") || voice.name.toLowerCase().includes("male"))
+    );
+
+    // 2. Jika tidak ada suara laki-laki, ambil suara Arab apa saja (biasanya Google TTS Female di Android)
+    if (!arVoice) {
+      arVoice = voices.find(voice => voice.lang.startsWith("ar") || voice.lang.startsWith("AR"));
+    }
+
+    if (arVoice) {
+      utterance.voice = arVoice;
+      
+      // Jika suara yang terpilih BUKAN suara laki-laki asli (kemungkinan suara wanita), 
+      // kita turunkan nadanya (pitch) agar terdengar lebih berat seperti laki-laki.
+      if (!arVoice.name.match(/Maged|Tarik|Naayf|male/i)) {
+        utterance.pitch = 0.65; // Nada berat (palsu laki-laki)
+      } else {
+        utterance.pitch = 0.95; // Nada asli laki-laki
+      }
+    } else if (voices.length > 0) {
+      console.warn("Suara Bahasa Arab (ar-SA) tidak terdeteksi.");
+      showToast("Suara Arab tidak ditemukan di sistem. Mencoba default browser.", "warning");
+      utterance.pitch = 0.8;
+    } else {
+      console.warn("Daftar suara browser kosong. Mencoba memutar...");
+      utterance.pitch = 0.8;
+    }
+
+    utterance.onstart = () => {
+      if (onStart) onStart();
+    };
+
+    utterance.onend = () => {
+      if (onEnd) onEnd();
+    };
+
+    utterance.onerror = (event) => {
+      if (onEnd) onEnd();
+      console.error("Kesalahan SpeechSynthesis:", event);
+      if (event.error === "language-unavailable") {
+        showToast("Gagal: Paket suara Bahasa Arab tidak terpasang di sistem operasi Anda.", "error");
+      } else if (event.error === "network") {
+        showToast("Gagal: Membutuhkan koneksi internet untuk mengunduh suara online browser.", "error");
+      } else if (event.error === "not-allowed") {
+        showToast("Gagal: Interaksi pengguna diperlukan sebelum memutar suara.", "error");
+      } else {
+        showToast(`Kesalahan suara: ${event.error}`, "error");
+      }
+    };
+
+    window.speechSynthesis.speak(utterance);
+  } else {
+    showToast("Browser Anda tidak mendukung Sintesis Suara.", "error");
+  }
+}
+
 // --- EVENT LISTENERS ---
 function setupEventListeners() {
-    // Theme toggle
-    elements.themeToggleBtn.addEventListener("click", toggleTheme);
-    
-    // Logout
-    if (elements.logoutBtn) {
-      elements.logoutBtn.addEventListener("click", () => {
-        if (confirm("Apakah Anda yakin ingin keluar dari akun?")) {
-          localStorage.removeItem('sb-access-token');
-          localStorage.removeItem('sb-user');
-          window.location.reload();
-        }
-      });
-    }
+  // Theme toggle
+  elements.themeToggleBtn.addEventListener("click", toggleTheme);
 
   // Tab navigation
   elements.navbar.addEventListener("click", (e) => {
@@ -488,7 +482,7 @@ function completeTheme(themeId) {
     appState.completedThemes.push(themeId);
     appStorage.setItem("completedThemes", JSON.stringify(appState.completedThemes));
     updateProgressWidget();
-    showToast("Hebat! Anda menyelesaikan tema ini ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â½ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â°", "success");
+    showToast("Hebat! Anda menyelesaikan tema ini 🎉", "success");
 
     // Refresh theme list in UI if on Learn Tab
     if (appState.activeTab === "learn") {
@@ -500,12 +494,6 @@ function completeTheme(themeId) {
 // --- TAB ROUTER / RENDERING ---
 function renderActiveTab() {
   elements.mainContent.innerHTML = "";
-
-  if (appState.activeTab === "ai") {
-      document.body.classList.add("ai-fullscreen-mode");
-  } else {
-      document.body.classList.remove("ai-fullscreen-mode");
-  }
 
   switch (appState.activeTab) {
     case "dashboard":
@@ -554,7 +542,7 @@ function renderDashboardView() {
   headerCard.style.marginBottom = "20px";
   headerCard.style.background = "linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(59, 130, 246, 0.08))";
   headerCard.innerHTML = `
-      <h2 style="font-size: 22px; margin-bottom: 5px; font-weight: 800; color: var(--text-main);">Marhaban di Al-Hiwar! ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ¢â‚¬Â¹</h2>
+    <h2 style="font-size: 22px; margin-bottom: 5px; font-weight: 800; color: var(--text-main);">Marhaban di Al-Hiwar! 👋</h2>
     <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5; max-width: 600px;">
       Aplikasi interaktif belajar bahasa Arab dengan skenario sehari-hari. Pantau kemajuan belajar Anda, uji pemahaman lewat kuis, dan tingkatkan keterampilan makhraj lewat obrolan asisten AI!
     </p>
@@ -1158,7 +1146,6 @@ function filterAndRenderDictionary(query, onlyFavorites = false) {
         <i class="bx bx-search-alt"></i>
         <h3>Kosakata tidak ditemukan</h3>
         <p>${onlyFavorites ? 'Daftar favorit Anda kosong.' : 'Coba gunakan kata kunci lainnya.'}</p>
-        ${!onlyFavorites && query.length > 0 ? `<button onclick="searchDictionaryWithAI('${query.replace(/'/g, "\\'")}')" style="margin-top: 15px; background: linear-gradient(135deg, #8b5cf6, #d946ef); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(139,92,246,0.3); display: inline-flex; align-items: center; gap: 8px;"><i class='bx bx-bot' style="font-size: 18px;"></i> Cari Terjemahan AI</button>` : ''}
       </div>
     `;
     return;
@@ -1221,89 +1208,19 @@ function filterAndRenderDictionary(query, onlyFavorites = false) {
     paywallCard.style.border = "1px dashed var(--primary-light)";
     paywallCard.style.marginTop = "20px";
     paywallCard.innerHTML = `
-      <i class="bx bxs-lock-alt" style="font-size: 32px; color: #eab308; margin-bottom: 10px;"></i>
+      <i class="bx bxs-lock-alt" style="font-size: 32px; color: var(--primary-color); margin-bottom: 10px;"></i>
       <h3 style="margin-bottom: 5px; color: var(--text-primary);">Akses Terbatas</h3>
-      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">Akses terbatas untuk anggota premium.</p>
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">Daftar ini dibatasi 50 kata. Tingkatkan ke Premium untuk membuka ribuan kosakata lainnya!</p>
+      <button class="btn btn-primary" id="dictUpgradeBtn">Buka Akses Premium</button>
     `;
+    
+    paywallCard.querySelector("#dictUpgradeBtn").addEventListener("click", () => {
+      showPremiumPaywall();
+    });
+    
     listContainer.appendChild(paywallCard);
   }
-
-  if (!onlyFavorites && query.length > 0 && !isLimited) {
-    const aiCard = document.createElement("div");
-    aiCard.style.padding = "15px";
-    aiCard.style.textAlign = "center";
-    aiCard.style.background = "linear-gradient(to right, rgba(139,92,246,0.1), rgba(217,70,239,0.1))";
-    aiCard.style.borderRadius = "15px";
-    aiCard.style.border = "1px dashed #c084fc";
-    aiCard.style.marginTop = "20px";
-    aiCard.style.cursor = "pointer";
-    aiCard.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: #7e22ce;">
-        <i class="bx bx-bot" style="font-size: 24px;"></i>
-        <div>
-          <p style="font-size: 14px; font-weight: bold; margin: 0;">Tidak menemukan yang pas?</p>
-          <p style="font-size: 12px; margin: 0; opacity: 0.8;">Gunakan Kamus AI Tak Terbatas (Premium)</p>
-        </div>
-      </div>
-    `;
-    aiCard.addEventListener("click", () => {
-        searchDictionaryWithAI(query);
-    });
-    listContainer.appendChild(aiCard);
-  }
 }
-
-window.searchDictionaryWithAI = function(query) {
-  if (!appState.isPremium) {
-      showPremiumPaywall();
-      return;
-  }
-  const listContainer = document.getElementById("dictionaryList");
-  if (!listContainer) return;
-  
-  const loadingId = "ai-loading-" + Date.now();
-  const loadingCard = document.createElement("div");
-  loadingCard.id = loadingId;
-  loadingCard.className = "dictionary-card";
-  loadingCard.innerHTML = `
-    <div style="text-align: center; padding: 20px; color: var(--primary-color);">
-       <i class="bx bx-loader-alt bx-spin" style="font-size: 24px; margin-bottom: 8px;"></i>
-       <p style="font-size: 14px; font-weight: bold;">AI sedang mencari terjemahan...</p>
-    </div>
-  `;
-  listContainer.prepend(loadingCard);
-  
-  fetch('/api/dictionary', {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query: query, aiModel: appState.aiModel })
-  })
-  .then(res => res.json())
-  .then(data => {
-    const loadingEl = document.getElementById(loadingId);
-    if (loadingEl) loadingEl.remove();
-    
-    if (data.error) {
-       showToast("Gagal mencari terjemahan AI: " + data.error, "error");
-       return;
-    }
-    
-    if (data.ar && data.id) {
-       const exists = globalDictionary.find(item => item.ar === data.ar);
-       if (!exists) {
-          globalDictionary.unshift(data);
-       }
-       filterAndRenderDictionary(query, false);
-    } else {
-       showToast("AI tidak mengerti kata tersebut.", "warning");
-    }
-  })
-  .catch(err => {
-    const loadingEl = document.getElementById(loadingId);
-    if (loadingEl) loadingEl.remove();
-    showToast("Koneksi bermasalah saat memanggil AI.", "error");
-  });
-};
 
 // --- 5. TUTOR AI VIEW ---
 function renderAiView() {
@@ -1328,7 +1245,7 @@ function renderAiView() {
   avatarArea.className = "ai-avatar-area";
   avatarArea.innerHTML = `
     <div style="position: absolute; top: 15px; left: 15px; z-index: 5; display: flex; gap: 8px; align-items: center;">
-              <button id="aiCloseBtn" title="Tutup Tutor AI" style="width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--card-border); background: var(--glass-bg); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-primary); margin-right: 5px;">
+      <button id="aiCloseBtn" title="Tutup Tutor AI" style="width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--card-border); background: var(--glass-bg); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-primary); margin-right: 5px;">
           <i class='bx bx-chevron-down' style="font-size: 24px;"></i>
         </button>
         <select id="inlineScenarioSelect" style="padding: 8px 12px; border-radius: 20px; border: 1px solid var(--card-border); background: var(--glass-bg); backdrop-filter: blur(8px); font-family: var(--font-primary); font-size: 13px; font-weight: 600; color: var(--text-secondary); outline: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05); max-width: 200px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
@@ -1450,7 +1367,7 @@ function renderChatHistory(container) {
     bubble.id = `chat-msg-${idx}`;
 
     const senderTitle = msg.sender === "user" ? "Anda" : "Ustadz Al-Hiwar";
-    const isPracticeable = msg.sender === "ai" && msg.ar && msg.ar !== "ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½ÃƒËœÃ‚Â´Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â®Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â ÃƒËœÃ‚ÂµÃƒâ„¢Ã‚Â ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬ËœÃƒËœÃ‚Â¸Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚Â" && msg.ar !== "ÃƒËœÃ‚Â®Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â·Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â£Ãƒâ„¢Ã…â€™ Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â  Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â­Ãƒâ„¢Ã‚Â API";
+    const isPracticeable = msg.sender === "ai" && msg.ar && msg.ar !== "تَشْخِيصُ النِّظَامِ" && msg.ar !== "خَطَأٌ فِي مِفْتَاحِ API";
 
     let contentHtml = "";
     if (msg.sender === "ai") {
@@ -1527,7 +1444,7 @@ function sendWelcomeMessage(container) {
     case "taaruf":
       welcomeMsg = {
         sender: "ai",
-        ar: "ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¹ÃƒËœÃ‚Â§ Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â³Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¹ÃƒËœÃ‚Â§! ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â¹Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬ËœÃƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½ Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬ËœÃƒËœÃ‚Â¹Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‚ÂÃƒâ„¢Ã‚Â. Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ ÃƒËœÃ‚Â§ÃƒËœÃ‚Â³Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½ Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã¢â‚¬â„¢ ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã…Â½ ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½ÃƒËœÃ…Â¸",
+        ar: "أَهْلًا وَسَهْلًا! أَنَا مُعَلِّمُكَ لِلتَّعَارُفِ. مَا اسْمُكَ وَمِنْ أَيْنَ أَنْتَ؟",
         latin: "Ahlan wa sahlan! Ana mu'allimuka lit-ta'arufi. Masmuka wa min ayna anta?",
         id: "Selamat datang! Saya guru Anda untuk topik perkenalan. Siapa namamu dan dari mana asalmu?"
       };
@@ -1535,7 +1452,7 @@ function sendWelcomeMessage(container) {
     case "restaurant":
       welcomeMsg = {
         sender: "ai",
-        ar: "Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â±Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â­Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â¨Ãƒâ„¢Ã¢â‚¬Â¹ÃƒËœÃ‚Â§ ÃƒËœÃ‚Â¨Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½ Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â  ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â·Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â¹Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚Â! ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã…Â Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Ëœ ÃƒËœÃ‚Â®Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â¯Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â©Ãƒâ„¢Ã‚ÂÃƒËœÃ…Â¸ Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â°Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ ÃƒËœÃ‚ÂªÃƒâ„¢Ã‚ÂÃƒËœÃ‚Â­Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â¨Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Ëœ ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã¢â‚¬â„¢ ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½ÃƒËœÃ‚Â£Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â½ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã…Â Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â½ÃƒËœÃ…Â¸",
+        ar: "مَرْحَبًا بِكَ فِي المَطْعَمِ! أَيَّ خِدْمَةٍ؟ مَاذَا تُحِبُّ أَنْ تَأْكُلَ الْيَوْمَ؟",
         latin: "Marhaban bika fil math'ami! Ayya khidmah? Maadzaa tuhibbu an ta'kula al-yauma?",
         id: "Selamat datang di restoran! Ada yang bisa dibantu? Apa yang ingin Anda makan hari ini?"
       };
@@ -1543,7 +1460,7 @@ function sendWelcomeMessage(container) {
     case "airport":
       welcomeMsg = {
         sender: "ai",
-        ar: "ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¹ÃƒËœÃ‚Â§ ÃƒËœÃ‚Â¨Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½ Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â  ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â·Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚Â. ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â¹Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â·Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â  ÃƒËœÃ‚Â¬Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â²Ãƒâ„¢Ã…Â½ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â³Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬ËœÃƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â½ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚Â Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬ËœÃƒËœÃ‚Â°Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â©Ãƒâ„¢Ã…Â½ÃƒËœÃ…â€™ Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã¢â‚¬â„¢ Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â½ÃƒËœÃ‚Â¶Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½.",
+        ar: "أَهْلًا بِكَ فِي الْمَطَارِ. أَعْطِنِي جَوَازَ السَّفَرِ وَالتَّذْكِرَةَ، مِنْ فَضْلِكَ.",
         latin: "Ahlan bika fil mathaari. A'thinii jawaazas safari wat tadzkirata, min fadhlik.",
         id: "Selamat datang di bandara. Berikan saya paspor dan tiket Anda, tolong."
       };
@@ -1551,7 +1468,7 @@ function sendWelcomeMessage(container) {
     default: // general
       welcomeMsg = {
         sender: "ai",
-        ar: "ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â³Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬ËœÃƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚Â ÃƒËœÃ‚Â¹Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬â„¢! ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ ÃƒËœÃ‚Â£Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â³Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â°Ãƒâ„¢Ã‚Â ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â­Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‹â€ Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚Â. Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â½ ÃƒËœÃ‚Â­Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã…Â Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â½ÃƒËœÃ…Â¸",
+        ar: "السَّلَامُ عَلَيْكُمْ! أَنَا أُسْتَاذُ الْحِوَارِ. كَيْفَ حَالُكَ الْيَوْمَ؟",
         latin: "Assalaamu 'alaikum! Ana ustadzul hiwaar. Kaifa haaluka al-yaum?",
         id: "Semoga keselamatan tercurah untukmu! Saya Ustadz Al-Hiwar. Bagaimana kabarmu hari ini?"
       };
@@ -1607,7 +1524,7 @@ function getOfflineSimulatorResponse(userText) {
     if (cleanText.includes("ismi") || cleanText.includes("nama saya") || cleanText.includes("saya")) {
       return {
         sender: "ai",
-        ar: "Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ ÃƒËœÃ‚Â´Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¡Ãƒâ„¢Ã…Â½ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬ËœÃƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã‚Â! Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â½ ÃƒËœÃ‚Â­Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã…Â Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â½ÃƒËœÃ…Â¸ Ãƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢ ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½ ÃƒËœÃ‚Â¨Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â®Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚ÂÃƒËœÃ…Â¸",
+        ar: "مَا شَاءَ اللَّهُ! وَكَيْفَ حَالُكَ الْيَوْمَ؟ هَلْ أَنْتَ بِخَيْرٍ؟",
         latin: "Maa syaa Allah! Wa kaifa haalukal yauma? Hal anta bikhairin?",
         id: "Masya Allah! Dan bagaimana kabarmu hari ini? Apakah kamu baik-baik saja?"
       };
@@ -1615,7 +1532,7 @@ function getOfflineSimulatorResponse(userText) {
     if (cleanText.includes("bikhair") || cleanText.includes("baik") || cleanText.includes("alhamdulillah")) {
       return {
         sender: "ai",
-        ar: "ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â­Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â¯Ãƒâ„¢Ã‚Â Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã‚Â! Ãƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢ ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½ ÃƒËœÃ‚Â·Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â¨Ãƒâ„¢Ã…â€™ ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬â„¢ Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‹â€ Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â¸Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬ËœÃƒâ„¢Ã‚ÂÃƒâ„¢Ã…â€™ÃƒËœÃ…Â¸",
+        ar: "الْحَمْدُ للهِ! هَلْ أَنْتَ طَالِبٌ أَمْ مُوَظَّفٌ؟",
         latin: "Alhamdulillah! Hal anta thaalibun am muwadhdhafun?",
         id: "Alhamdulillah! Apakah kamu seorang mahasiswa atau karyawan?"
       };
@@ -1623,7 +1540,7 @@ function getOfflineSimulatorResponse(userText) {
     if (cleanText.includes("thaalib") || cleanText.includes("mahasiswa") || cleanText.includes("muwadhdhaf") || cleanText.includes("kerja")) {
       return {
         sender: "ai",
-        ar: "Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â²Ãƒâ„¢Ã…â€™ ÃƒËœÃ‚Â¬Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â¯Ãƒâ„¢Ã¢â‚¬Â¹Ãƒâ„¢Ã¢â‚¬ËœÃƒËœÃ‚Â§! ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ ÃƒËœÃ‚Â³Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â¹Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â ÃƒËœÃ‚Â¯Ãƒâ„¢Ã…â€™ ÃƒËœÃ‚Â¨Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¦Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½ Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â¨Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â°Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â­Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‹â€ Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚Â. ÃƒËœÃ‚Â´Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â±Ãƒâ„¢Ã¢â‚¬Â¹ÃƒËœÃ‚Â§ Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½!",
+        ar: "مُمْتَازٌ جِدًّا! أَنَا سَعِيدٌ بِلِقَائِكَ وَبِهَذَا الْحِوَارِ. شُكْرًا لَكَ!",
         latin: "Mumtaazun jiddan! Ana sa'iidun biliqaa'ika wa bihadzal hiwaar. Syukran laka!",
         id: "Sangat luar biasa! Saya senang bertemu denganmu dan atas percakapan ini. Terima kasih!"
       };
@@ -1632,7 +1549,7 @@ function getOfflineSimulatorResponse(userText) {
     if (cleanText.includes("uriidu") || cleanText.includes("ingin") || cleanText.includes("makan") || cleanText.includes("minta")) {
       return {
         sender: "ai",
-        ar: "ÃƒËœÃ‚Â­Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â³Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã¢â‚¬Â¹ÃƒËœÃ‚Â§ÃƒËœÃ…â€™ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬ËœÃƒËœÃ‚Â²Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Ëœ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Ëœ Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¯Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬ËœÃƒËœÃ‚Â¬Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¬Ãƒâ„¢Ã‚Â Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â°Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â ÃƒËœÃ‚Â°Ãƒâ„¢Ã…â€™ ÃƒËœÃ‚Â¬Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â¯Ãƒâ„¢Ã¢â‚¬Â¹Ãƒâ„¢Ã¢â‚¬ËœÃƒËœÃ‚Â§. Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â°Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ ÃƒËœÃ‚ÂªÃƒâ„¢Ã‚ÂÃƒËœÃ‚Â­Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â¨Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Ëœ ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã¢â‚¬â„¢ ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½ÃƒËœÃ‚Â´Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â¨Ãƒâ„¢Ã…Â½ÃƒËœÃ…Â¸",
+        ar: "حَسَنًا، الرُّزُّ الْمَقْلِيُّ وَالدَّجَاجُ لَذِيذٌ جِدًّا. وَمَاذَا تُحِبُّ أَنْ تَشْرَبَ؟",
         latin: "Hasanan, ar-ruzzul maqliyy wad dajaaju ladziidun jiddan. Wa maadzaa tuhibbu an tasyraba?",
         id: "Baiklah, nasi goreng dan ayam itu sangat lezat. Dan apa yang ingin Anda minum?"
       };
@@ -1640,7 +1557,7 @@ function getOfflineSimulatorResponse(userText) {
     if (cleanText.includes("minum") || cleanText.includes("jus") || cleanText.includes("teh") || cleanText.includes("burtuqal") || cleanText.includes("ma'a")) {
       return {
         sender: "ai",
-        ar: "Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â²Ãƒâ„¢Ã…â€™! Ãƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢ ÃƒËœÃ‚ÂªÃƒâ„¢Ã‚ÂÃƒËœÃ‚Â±Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â ÃƒËœÃ‚Â¯Ãƒâ„¢Ã‚Â ÃƒËœÃ‚Â·Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â¨Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã¢â‚¬Â¹ÃƒËœÃ‚Â§ ÃƒËœÃ‚Â¢ÃƒËœÃ‚Â®Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â½ÃƒËœÃ…â€™ ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬â„¢ Ãƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â°Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‚ÂÃƒËœÃ…Â¸",
+        ar: "مُمْتَازٌ! هَلْ تُرِيدُ طَبَقًا آخَرَ، أَمْ هَذَا كَافٍ؟",
         latin: "Mumtaaz! Hal turiidu thabaqan aakhara, am hadzaa kaafin?",
         id: "Luar biasa! Apakah Anda ingin piring/hidangan lainnya, atau ini sudah cukup?"
       };
@@ -1648,7 +1565,7 @@ function getOfflineSimulatorResponse(userText) {
     if (cleanText.includes("cukup") || cleanText.includes("tagihan") || cleanText.includes("hisaab") || cleanText.includes("laa") || cleanText.includes("tidak")) {
       return {
         sender: "ai",
-        ar: "Ãƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â°Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ Ãƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‹â€ Ãƒâ„¢Ã…Â½ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â­Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â³Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¨Ãƒâ„¢Ã‚ÂÃƒËœÃ…â€™ ÃƒËœÃ‚Â®Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â³Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â©Ãƒâ„¢Ã…Â½ ÃƒËœÃ‚Â¹Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â´Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â½ ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â½ ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¨Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬ËœÃƒËœÃ‚Â©Ãƒâ„¢Ã‚Â. ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â½ÃƒËœÃ‚Â¶Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬ËœÃƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢!",
+        ar: "هَذَا هُوَ الْحِسَابُ، خَمْسَةَ عَشَرَ أَلْفَ رُوبِيَّةٍ. تَفَضَّلْ!",
         latin: "Hadzaa huwal hisaab, khamsata 'asyara alfa ruubiyyah. Tafadhdhal!",
         id: "Ini total tagihannya, 15 ribu rupiah. Silakan!"
       };
@@ -1657,7 +1574,7 @@ function getOfflineSimulatorResponse(userText) {
     if (cleanText.includes("jawaaz") || cleanText.includes("paspor") || cleanText.includes("tiket") || cleanText.includes("tafadhdhal") || cleanText.includes("ini")) {
       return {
         sender: "ai",
-        ar: "ÃƒËœÃ‚Â´Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â±Ãƒâ„¢Ã¢â‚¬Â¹ÃƒËœÃ‚Â§ Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½. Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ Ãƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â Ãƒâ„¢Ã…Â½ Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â¬Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã…Â½ÃƒËœÃ‚ÂªÃƒâ„¢Ã‚ÂÃƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â½ÃƒËœÃ…Â¸ Ãƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢ ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½ ÃƒËœÃ‚Â°Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â¨Ãƒâ„¢Ã…â€™ Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â¹Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â©Ãƒâ„¢Ã‚ÂÃƒËœÃ…Â¸",
+        ar: "شُكْرًا لَكَ. مَا هِيَ وِجْهَتُكَ اليَوْمَ؟ هَلْ أَنْتَ ذَاهِبٌ لِلْعُمْرَةِ؟",
         latin: "Syukran laka. Maa hiya wijhatukal yauma? Hal anta dzaahibun lil 'umrati?",
         id: "Terima kasih. Ke mana tujuan Anda hari ini? Apakah Anda pergi untuk ibadah umroh?"
       };
@@ -1665,7 +1582,7 @@ function getOfflineSimulatorResponse(userText) {
     if (cleanText.includes("umrah") || cleanText.includes("makkah") || cleanText.includes("ya") || cleanText.includes("na'am")) {
       return {
         sender: "ai",
-        ar: "ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â­Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â©Ãƒâ„¢Ã…â€™ Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â¨Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â±Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â©Ãƒâ„¢Ã…â€™! Ãƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â°Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã‚Â ÃƒËœÃ‚Â¨Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â·Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â©Ãƒâ„¢Ã‚Â ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂµÃƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬ËœÃƒËœÃ‚Â¹Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‹â€ ÃƒËœÃ‚Â¯Ãƒâ„¢Ã‚Â. ÃƒËœÃ‚Â±Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â­Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â©Ãƒâ„¢Ã¢â‚¬Â¹ ÃƒËœÃ‚Â³Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â¹Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â ÃƒËœÃ‚Â¯Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â©Ãƒâ„¢Ã¢â‚¬Â¹!",
+        ar: "رِحْلَةٌ مُبَارَكَةٌ! هَذِهِ بِطَاقَةُ الصُّعُودِ. رِحْلَةً سَعِيدَةً!",
         latin: "Rihlatun mubaarakah! Hadzihi bitaaqatush shu'uud. Rihlatan sa'iidah!",
         id: "Perjalanan yang diberkahi! Ini kartu naik pesawat (boarding pass) Anda. Semoga perjalanan Anda menyenangkan!"
       };
@@ -1676,7 +1593,7 @@ function getOfflineSimulatorResponse(userText) {
   if (cleanText.includes("salam") || cleanText.includes("assalamu")) {
     return {
       sender: "ai",
-      ar: "Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â¹Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚Â ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â³Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬ËœÃƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚Â! Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â½ ÃƒËœÃ‚Â­Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½ Ãƒâ„¢Ã…Â Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ ÃƒËœÃ‚ÂµÃƒâ„¢Ã…Â½ÃƒËœÃ‚Â¯Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â ÃƒËœÃ…Â¸",
+      ar: "وَعَلَيْكُمُ السَّلَامُ! كَيْفَ حَالُكَ يَا صَدِيقِي؟",
       latin: "Wa 'alaikumus salaam! Kaifa haaluka yaa shadiiqii?",
       id: "Dan keselamatan tercurah kepadamu! Bagaimana kabarmu wahai kawanku?"
     };
@@ -1684,7 +1601,7 @@ function getOfflineSimulatorResponse(userText) {
   if (cleanText.includes("syukran") || cleanText.includes("terima kasih") || cleanText.includes("kasih")) {
     return {
       sender: "ai",
-      ar: "ÃƒËœÃ‚Â¹Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Â¹ÃƒËœÃ‚Â§! ÃƒËœÃ‚Â£Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ ÃƒËœÃ‚Â³Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â¹Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â ÃƒËœÃ‚Â¯Ãƒâ„¢Ã…â€™ ÃƒËœÃ‚Â¬Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â¯Ãƒâ„¢Ã¢â‚¬Â¹Ãƒâ„¢Ã¢â‚¬ËœÃƒËœÃ‚Â§ ÃƒËœÃ‚Â¨Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â­Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â«Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â©Ãƒâ„¢Ã‚Â Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â¹Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½.",
+      ar: "عَفْوًا! أَنَا سَعِيدٌ جِدًّا بِالْمُحَادَثَةِ مَعَكَ.",
       latin: "'Afwan! Ana sa'iidun jiddan bil muhaadatsati ma'aka.",
       id: "Sama-sama! Saya sangat senang berbicara denganmu."
     };
@@ -1693,7 +1610,7 @@ function getOfflineSimulatorResponse(userText) {
   // Default response showing API requirement
   return {
     sender: "ai",
-    ar: "Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â¡Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚ÂªÃƒâ„¢Ã‚ÂÃƒâ„¢Ã†â€™Ãƒâ„¢Ã…Â½ÃƒËœÃ…â€™ Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬ËœÃƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â  Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â  ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â¶Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â¹Ãƒâ„¢Ã‚Â ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â£Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬â„¢Ãƒâ„¢Ã¢â‚¬Å¡Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Ëœ (offline). Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â¥Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â¬Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¨Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â©Ãƒâ„¢Ã‚Â ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â°Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬ËœÃƒâ„¢Ã†â€™Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬ËœÃƒËœÃ‚Â©Ãƒâ„¢Ã‚ÂÃƒËœÃ…â€™ Ãƒâ„¢Ã…Â Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â±Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â¬Ãƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Â° Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã‚ÂÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¨Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â©Ãƒâ„¢Ã‚Â Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â­Ãƒâ„¢Ã‚Â API.",
+    ar: "فَهِمْتُكَ، لَكِنَّنِي فِي الْوَضْعِ الأُفْقِيِّ (offline). لِلْإِجَابَةِ الذَّكِيَّةِ، يُرْجَى كِتَابَةُ مِفْتَاحِ API.",
     latin: "Fahimtuka, laakinnanii fil wadhi al-ufqiyy (offline). Lil ijaabatil dzakiyyah, yurjaa kitaabatu miftaah API.",
     id: "Saya paham, tapi saya sedang dalam mode offline. Untuk mendapat balasan cerdas, silakan masukkan API Key di samping."
   };
@@ -1733,7 +1650,7 @@ function getGeminiApiResponse(userText, container, typingIndicator) {
       const errMsg = data.error.message || "Kesalahan tidak dikenal.";
       const errReply = {
         sender: "ai",
-        ar: "ÃƒËœÃ‚Â®Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â·Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â£Ãƒâ„¢Ã…â€™ Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â  Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â­Ãƒâ„¢Ã‚Â API",
+        ar: "خَطَأٌ فِي مِفْتَاحِ API",
         latin: "[Khatha'un fii miftaahi API]",
         id: "Gagal memanggil Gemini API:\n**Pesan Kesalahan:** \"" + errMsg + "\"\n\nSilakan periksa kembali API Key Anda."
       };
@@ -1743,7 +1660,7 @@ function getGeminiApiResponse(userText, container, typingIndicator) {
 
       const speechBubble = document.getElementById("aiSpeechBubble");
       if (speechBubble) {
-        speechBubble.textContent = "ÃƒËœÃ‚Â®Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â·Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â£Ãƒâ„¢Ã…â€™";
+        speechBubble.textContent = "خَطَأٌ";
         speechBubble.classList.remove("hidden");
       }
       return;
@@ -1803,7 +1720,7 @@ function getGeminiApiResponse(userText, container, typingIndicator) {
 
     const errReply = {
       sender: "ai",
-      ar: "ÃƒËœÃ‚Â¹Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â°Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â±Ãƒâ„¢Ã¢â‚¬Â¹ÃƒËœÃ‚Â§ÃƒËœÃ…â€™ ÃƒËœÃ‚Â­Ãƒâ„¢Ã…Â½ÃƒËœÃ‚ÂµÃƒâ„¢Ã…Â½Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã…Â½ ÃƒËœÃ‚Â®Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â·Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â£Ãƒâ„¢Ã…â€™ Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â  ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â§ÃƒËœÃ‚ÂªÃƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬ËœÃƒËœÃ‚ÂµÃƒâ„¢Ã…Â½ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã‚Â ÃƒËœÃ‚Â¨Ãƒâ„¢Ã‚ÂÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â®Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¯Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚Â.",
+      ar: "عُذْرًا، حَصَلَ خَطَأٌ فِي الِاتِّصَالِ بِالْخَادِمِ.",
       latin: "Udzran, hashala khatha'un fil ittishaali bil khaadim.",
       id: "Maaf, terjadi kesalahan koneksi jaringan saat menghubungi API Gemini. Pastikan API Key Anda benar."
     };
@@ -1998,9 +1915,9 @@ function runApiDiagnostics(container) {
   const diagIdx = appState.aiChatHistory.length;
   const initMsg = {
     sender: "ai",
-    ar: "ÃƒËœÃ‚ÂªÃƒâ„¢Ã…Â½ÃƒËœÃ‚Â´Ãƒâ„¢Ã¢â‚¬â„¢ÃƒËœÃ‚Â®Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â ÃƒËœÃ‚ÂµÃƒâ„¢Ã‚Â ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã¢â‚¬ËœÃƒËœÃ‚Â¸Ãƒâ„¢Ã…Â½ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã‚Â",
+    ar: "تَشْخِيصُ النِّظَامِ",
     latin: "[Tasykhiisun nidhaam]",
-    id: "ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂºÃ‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â **Memulai Diagnosa API...**\nSedang menghubungkan ke server Google..."
+    id: "🛠️ **Memulai Diagnosa API...**\nSedang menghubungkan ke server Google..."
   };
 
   appState.aiChatHistory.push(initMsg);
@@ -2058,17 +1975,17 @@ function runApiDiagnostics(container) {
           }
         }
 
-        updateDiag("ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂºÃ‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â **Hasil Diagnosa API (Sukses):**\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ **Koneksi Google:** Berhasil terhubung!\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ **API Key:** Valid.\nÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹ **Daftar Model yang Tersedia di Akun Anda:**\n" + models.map(function(m) { return "- `" + m + "`"; }).join("\n") + "\n\n*Catatan:* Sistem telah memperbarui pilihan model Anda secara otomatis agar kompatibel dengan akun Anda. Sekarang silakan coba ketik pesan obrolan kembali.");
+        updateDiag("🛠️ **Hasil Diagnosa API (Sukses):**\n✅ **Koneksi Google:** Berhasil terhubung!\n✅ **API Key:** Valid.\n📋 **Daftar Model yang Tersedia di Akun Anda:**\n" + models.map(function(m) { return "- `" + m + "`"; }).join("\n") + "\n\n*Catatan:* Sistem telah memperbarui pilihan model Anda secara otomatis agar kompatibel dengan akun Anda. Sekarang silakan coba ketik pesan obrolan kembali.");
       } else {
         const errMsg = data.error ? data.error.message : "Kesalahan tidak dikenal.";
         const errCode = data.error ? data.error.code : res.status;
         const errStatus = data.error ? data.error.status : "N/A";
 
-        updateDiag("ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂºÃ‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â **Hasil Diagnosa API (Gagal):**\nÃƒÂ¢Ã‚ÂÃ…â€™ **Koneksi Google:** Gagal (HTTP " + res.status + ")\nÃƒÂ¢Ã‚ÂÃ…â€™ **Kode Error:** `" + errCode + "` (" + errStatus + ")\nÃƒÂ¢Ã‚ÂÃ…â€™ **Pesan Google:** \"" + errMsg + "\"\n\n*Petunjuk:*\n1. Jika pesannya adalah *\"API key not valid\"*, silakan ketik ulang Kunci API Anda dengan teliti tanpa spasi.\n2. Jika pesannya *\"location is not supported\"*, berarti server Google memblokir akses dari wilayah/IP Anda.\n3. Pastikan Anda membuat Kunci API melalui portal **Google AI Studio**, bukan Google Cloud Console biasa.");
+        updateDiag("🛠️ **Hasil Diagnosa API (Gagal):**\n❌ **Koneksi Google:** Gagal (HTTP " + res.status + ")\n❌ **Kode Error:** `" + errCode + "` (" + errStatus + ")\n❌ **Pesan Google:** \"" + errMsg + "\"\n\n*Petunjuk:*\n1. Jika pesannya adalah *\"API key not valid\"*, silakan ketik ulang Kunci API Anda dengan teliti tanpa spasi.\n2. Jika pesannya *\"location is not supported\"*, berarti server Google memblokir akses dari wilayah/IP Anda.\n3. Pastikan Anda membuat Kunci API melalui portal **Google AI Studio**, bukan Google Cloud Console biasa.");
       }
     })
     .catch(function(err) {
-      updateDiag("ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂºÃ‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â **Hasil Diagnosa API (Gagal):**\nÃƒÂ¢Ã‚ÂÃ…â€™ **Koneksi Google:** Gagal terhubung (Network Error)\nÃƒÂ¢Ã‚ÂÃ…â€™ **Detail:** \"" + err.message + "\"\n\n*Petunjuk:* Pastikan komputer Anda terhubung ke internet dan tidak diblokir oleh antivirus atau ekstensi pemblokir iklan (AdBlocker) di browser.");
+      updateDiag("🛠️ **Hasil Diagnosa API (Gagal):**\n❌ **Koneksi Google:** Gagal terhubung (Network Error)\n❌ **Detail:** \"" + err.message + "\"\n\n*Petunjuk:* Pastikan komputer Anda terhubung ke internet dan tidak diblokir oleh antivirus atau ekstensi pemblokir iklan (AdBlocker) di browser.");
     });
 }
 
@@ -2312,9 +2229,9 @@ function startPronunciationPractice(targetArabic, idx) {
 // Strip Harakat and normalization logic
 function stripArabicHarakat(text) {
   let clean = text.replace(/[\u064B-\u0652\u0670]/g, ""); // strip tashkeel
-  clean = clean.replace(/[ÃƒËœÃ‚Â£ÃƒËœÃ‚Â¥ÃƒËœÃ‚Â¢]/g, "ÃƒËœÃ‚Â§"); // normalize alef
-  clean = clean.replace(/ÃƒËœÃ‚Â©/g, "Ãƒâ„¢Ã¢â‚¬Â¡"); // normalize teh marbuta
-  clean = clean.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()ÃƒËœÃ…Â¸?!]/g, ""); // remove punctuation
+  clean = clean.replace(/[أإآ]/g, "ا"); // normalize alef
+  clean = clean.replace(/ة/g, "ه"); // normalize teh marbuta
+  clean = clean.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()؟?!]/g, ""); // remove punctuation
   clean = clean.replace(/\s+/g, " ").trim();
   return clean.toLowerCase();
 }
@@ -2341,7 +2258,6 @@ function diffTexts(targetArabic, userSpeech) {
   return html;
 }
 
-// --- 6. NAHWU SHOROF VIEW ---
 // --- 6. NAHWU SHOROF VIEW ---
 function renderNahwuView() {
   elements.mainContent.innerHTML = "";
@@ -2625,12 +2541,4 @@ function renderNahwuChapter(container, chapter) {
 
   container.appendChild(completeBtn);
 }
-
-
-
-
-
-
-
-
 
