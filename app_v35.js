@@ -1144,6 +1144,7 @@ function filterAndRenderDictionary(query, onlyFavorites = false) {
         <i class="bx bx-search-alt"></i>
         <h3>Kosakata tidak ditemukan</h3>
         <p>${onlyFavorites ? 'Daftar favorit Anda kosong.' : 'Coba gunakan kata kunci lainnya.'}</p>
+        ${!onlyFavorites && query.length > 0 ? `<button onclick="searchDictionaryWithAI('${query.replace(/'/g, "\\'")}')" style="margin-top: 15px; background: linear-gradient(135deg, #8b5cf6, #d946ef); color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(139,92,246,0.3); display: inline-flex; align-items: center; gap: 8px;"><i class='bx bx-bot' style="font-size: 18px;"></i> Cari Terjemahan AI</button>` : ''}
       </div>
     `;
     return;
@@ -1210,12 +1211,85 @@ function filterAndRenderDictionary(query, onlyFavorites = false) {
       <h3 style="margin-bottom: 5px; color: var(--text-primary);">Akses Terbatas</h3>
       <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">Akses terbatas untuk anggota premium.</p>
     `;
-    
-    // Removed button listener
-    
     listContainer.appendChild(paywallCard);
   }
+
+  if (!onlyFavorites && query.length > 0 && !isLimited) {
+    const aiCard = document.createElement("div");
+    aiCard.style.padding = "15px";
+    aiCard.style.textAlign = "center";
+    aiCard.style.background = "linear-gradient(to right, rgba(139,92,246,0.1), rgba(217,70,239,0.1))";
+    aiCard.style.borderRadius = "15px";
+    aiCard.style.border = "1px dashed #c084fc";
+    aiCard.style.marginTop = "20px";
+    aiCard.style.cursor = "pointer";
+    aiCard.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: #7e22ce;">
+        <i class="bx bx-bot" style="font-size: 24px;"></i>
+        <div>
+          <p style="font-size: 14px; font-weight: bold; margin: 0;">Tidak menemukan yang pas?</p>
+          <p style="font-size: 12px; margin: 0; opacity: 0.8;">Gunakan Kamus AI Tak Terbatas (Premium)</p>
+        </div>
+      </div>
+    `;
+    aiCard.addEventListener("click", () => {
+        searchDictionaryWithAI(query);
+    });
+    listContainer.appendChild(aiCard);
+  }
 }
+
+window.searchDictionaryWithAI = function(query) {
+  if (!appState.isPremium) {
+      showPremiumPaywall();
+      return;
+  }
+  const listContainer = document.getElementById("dictionaryList");
+  if (!listContainer) return;
+  
+  const loadingId = "ai-loading-" + Date.now();
+  const loadingCard = document.createElement("div");
+  loadingCard.id = loadingId;
+  loadingCard.className = "dictionary-card";
+  loadingCard.innerHTML = `
+    <div style="text-align: center; padding: 20px; color: var(--primary-color);">
+       <i class="bx bx-loader-alt bx-spin" style="font-size: 24px; margin-bottom: 8px;"></i>
+       <p style="font-size: 14px; font-weight: bold;">AI sedang mencari terjemahan...</p>
+    </div>
+  `;
+  listContainer.prepend(loadingCard);
+  
+  fetch('/api/dictionary', {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query: query, aiModel: appState.aiModel })
+  })
+  .then(res => res.json())
+  .then(data => {
+    const loadingEl = document.getElementById(loadingId);
+    if (loadingEl) loadingEl.remove();
+    
+    if (data.error) {
+       showToast("Gagal mencari terjemahan AI: " + data.error, "error");
+       return;
+    }
+    
+    if (data.ar && data.id) {
+       const exists = globalDictionary.find(item => item.ar === data.ar);
+       if (!exists) {
+          globalDictionary.unshift(data);
+       }
+       filterAndRenderDictionary(query, false);
+    } else {
+       showToast("AI tidak mengerti kata tersebut.", "warning");
+    }
+  })
+  .catch(err => {
+    const loadingEl = document.getElementById(loadingId);
+    if (loadingEl) loadingEl.remove();
+    showToast("Koneksi bermasalah saat memanggil AI.", "error");
+  });
+};
 
 // --- 5. TUTOR AI VIEW ---
 function renderAiView() {
