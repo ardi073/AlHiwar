@@ -2477,3 +2477,41 @@ body.ai-fullscreen-mode .app-container {
   gap: 8px;
   cursor: pointer;
 }
+
+/* --- TALKPAL 3D AVATAR STYLES --- */
+.ai-3d-avatar-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 250px;
+  background: linear-gradient(to bottom, transparent, rgba(16, 185, 129, 0.1));
+  border-radius: 20px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-3d-avatar {
+  height: 240px;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+  filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
+}
+
+.ai-3d-avatar.idle {
+  animation: breathe 3s infinite ease-in-out;
+}
+
+.ai-3d-avatar.speaking {
+  animation: talkBounce 0.5s infinite alternate ease-in-out;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.02); }
+}
+
+@keyframes talkBounce {
+  0% { transform: translateY(0) scale(1.02); }
+  100% { transform: translateY(-3px) scale(1.03); }
+}
