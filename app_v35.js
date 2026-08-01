@@ -15,14 +15,29 @@ try {
 // Konfigurasi Supabase
 const supabaseUrl = 'https://cjwufugmuhzbvmbixjyx.supabase.co';
 const supabaseKey = 'sb_publishable_L_Ds2zgmc_vK8Unkb-mB4A_cU6BDGEY';
-let supabase = null;
-if (window.supabase) {
-  try {
-    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-  } catch (err) {
-    console.error("Gagal menginisialisasi Supabase:", err);
+// CUSTOM REST API CLIENT UNTUK HP LAWAS
+const supabaseClient = {
+  request: function(method, endpoint, body) {
+    return new Promise(function(resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open(method, supabaseUrl + endpoint, true);
+      xhr.setRequestHeader('apikey', supabaseKey);
+      var token = localStorage.getItem('sb-access-token');
+      if (token) xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+      if (body) xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          var response;
+          try { response = JSON.parse(xhr.responseText); } catch(e) { response = xhr.responseText; }
+          if (xhr.status >= 200 && xhr.status < 300) resolve({ data: response, error: null });
+          else reject({ message: response.error_description || response.msg || "Terjadi kesalahan server." });
+        }
+      };
+      xhr.onerror = function() { reject({ message: "Network Error: Tidak bisa terhubung ke server." }); };
+      xhr.send(body ? JSON.stringify(body) : null);
+    });
   }
-}
+};
 
 const appStorage = {
   memory: {},
@@ -97,6 +112,10 @@ function checkPremiumAccess(themeId) {
   if (appState.isPremium) return true;
   if (FREE_THEME_IDS.includes(themeId)) return true;
   
+  return false;
+}
+
+function showPremiumPaywall() {
   const modal = document.getElementById("premiumModal");
   modal.innerHTML = `
     <div class="glass-panel text-center max-w-sm w-full mx-4 relative">
@@ -130,37 +149,31 @@ function closePremiumModal() {
 function initAuth() {
   const loginOverlay = document.getElementById('login-overlay');
   
-  if (!supabase) {
-    console.error("Supabase belum terinisialisasi.");
+  if (!supabaseClient) {
+    console.error("Supabase Client belum terinisialisasi.");
     if (loginOverlay) loginOverlay.style.display = 'flex';
     document.getElementById('login-alert').innerHTML = "Koneksi ke server gagal. Harap refresh halaman atau matikan AdBlocker.";
     document.getElementById('login-alert').style.display = 'block';
     return;
   }
-
-  supabase.auth.getSession().then(function(result) {
-    const session = result.data.session;
-    if (!session) {
-      if (loginOverlay) loginOverlay.style.display = 'flex';
-    } else {
-      if (loginOverlay) loginOverlay.style.display = 'none';
-      checkPremiumStatus(session.user.id);
-    }
-  }).catch(function(err) {
-    console.error("Error mengambil sesi:", err);
+  
+  var token = localStorage.getItem('sb-access-token');
+  if (token) {
+    if (loginOverlay) loginOverlay.style.display = 'none';
+    appState.user = { id: localStorage.getItem('sb-user-id') };
+    initApp(appState.user.id);
+  } else {
     if (loginOverlay) loginOverlay.style.display = 'flex';
-  });
+  }
 }
 
 function checkPremiumStatus(userId) {
-  supabase
-    .from('users_premium')
-    .select('is_premium')
-    .eq('id', userId)
-    .single()
+  supabaseClient.request('GET', '/rest/v1/users_premium?id=eq.' + userId + '&select=is_premium', null)
     .then(function(result) {
-      if (result.data) {
-        appState.isPremium = result.data.is_premium;
+      if (result.data && result.data.length > 0) {
+        appState.isPremium = result.data[0].is_premium;
+        appStorage.setItem('isPremium', appState.isPremium);
+        updateProgressWidget();
       }
     })
     .catch(function(err) {
@@ -184,7 +197,7 @@ if (loginForm) {
     btn.style.opacity = '0.7';
     txt.innerHTML = "<i class='bx bx-loader-alt bx-spin' style='margin-right:8px;'></i> Memproses...";
     
-    if (!supabase) {
+    if (!supabaseClient) {
       alertBox.innerHTML = "Sistem login diblokir oleh HP Anda. Harap matikan AdBlocker atau gunakan browser standar.";
       alertBox.style.display = 'block';
       btn.disabled = false;
@@ -192,33 +205,32 @@ if (loginForm) {
       txt.innerHTML = "Masuk Sekarang";
       return;
     }
-
-    supabase.auth.signInWithPassword({ email: email, password: password })
-      .then(function(result) {
-        if (result.error) throw result.error;
-        
-        alertBox.style.display = 'none';
-        txt.innerHTML = "<i class='bx bx-check'></i> Berhasil Masuk!";
-        btn.style.background = "var(--success)";
-        
-        setTimeout(function() {
-          document.getElementById('login-overlay').style.display = 'none';
-          checkPremiumStatus(result.data.user.id);
-          
+    
+    supabaseClient.request('POST', '/auth/v1/token?grant_type=password', { email: email, password: password })
+        .then(function(result) {
+          localStorage.setItem('sb-access-token', result.data.access_token);
+          localStorage.setItem('sb-user-id', result.data.user.id);
+          alertBox.style.display = 'none';
+          txt.innerHTML = "<i class='bx bx-check'></i> Berhasil Masuk!";
+          btn.style.background = "var(--success)";
+          setTimeout(() => {
+            document.getElementById('login-overlay').style.display = 'none';
+            appState.user = result.data.user;
+            initApp(appState.user.id);
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            txt.innerHTML = "Masuk Sekarang";
+            btn.style.background = "var(--primary-color)";
+          }, 800);
+        })
+        .catch(function(err) {
+          console.error("Login Error:", err);
+          alertBox.innerHTML = err.message || "Login gagal. Cek kembali email dan password Anda.";
+          alertBox.style.display = 'block';
           btn.disabled = false;
           btn.style.opacity = '1';
           txt.innerHTML = "Masuk Sekarang";
-          btn.style.background = "var(--primary-color)";
-        }, 1500);
-      })
-      .catch(function(error) {
-        alertBox.innerHTML = error.message === 'Invalid login credentials' ? 'Email atau kata sandi salah.' : error.message;
-        alertBox.style.display = 'block';
-        
-        btn.disabled = false;
-        btn.style.opacity = '1';
-        txt.innerHTML = "Masuk Sekarang";
-      });
+        });
   });
 }
 
@@ -281,50 +293,6 @@ function toggleTheme() {
 // --- AUDIO UTILITIES (TTS) ---
 let currentAudio = null;
 
-async function speakArabic(text, onStart = null, onEnd = null) {
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio = null;
-  }
-
-  try {
-    showToast("Memuat suara...", "info"); // Added Loading Toast
-    if (onStart) onStart(); // Memicu animasi UI
-    const response = await fetch('/api/tts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
-    });
-
-    if (!response.ok) {
-      console.warn("ElevenLabs TTS gagal (mungkin kuota habis), kembali menggunakan suara sistem...");
-      fallbackSpeakArabic(text, null, onEnd); // onStart sudah dipanggil
-      return;
-    }
-
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    currentAudio = new Audio(url);
-    
-    currentAudio.onended = () => {
-      if (onEnd) onEnd();
-      URL.revokeObjectURL(url);
-    };
-    currentAudio.onerror = () => {
-      console.warn("Gagal memutar audio MP3, kembali menggunakan suara sistem...");
-      fallbackSpeakArabic(text, null, onEnd);
-    };
-    
-    currentAudio.play().catch(err => {
-      console.warn("Pemutaran otomatis diblokir browser:", err);
-      fallbackSpeakArabic(text, null, onEnd);
-    });
-
-  } catch (err) {
-    console.error("Koneksi ke backend TTS gagal:", err);
-    fallbackSpeakArabic(text, null, onEnd);
-  }
-}
 // Text-to-Speech Helper (Refactored to avoid async)
 function speakArabic(text, onStart = null, onEnd = null) {
   return new Promise(function(resolve, reject) {
@@ -353,143 +321,6 @@ function speakArabic(text, onStart = null, onEnd = null) {
 
     window.speechSynthesis.speak(utterance);
   });
-}
-
-function fallbackSpeakArabic(text, onStart = null, onEnd = null) {
-  if ("speechSynthesis" in window) {
-    // Batal suara yang sedang berjalan
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "ar-SA";
-    utterance.rate = 0.80; // Diperlambat sedikit agar terdengar lebih luwes (seperti Ustadz)
-    
-    const voices = window.speechSynthesis.getVoices();
-    
-    // 1. Prioritaskan suara laki-laki Arab yang dikenal (Mac/iOS: Maged, Tarik | Windows: Naayf)
-    let arVoice = voices.find(voice => 
-      (voice.lang.startsWith("ar") || voice.lang.startsWith("AR")) && 
-      (voice.name.includes("Maged") || voice.name.includes("Tarik") || voice.name.includes("Naayf") || voice.name.toLowerCase().includes("male"))
-    );
-
-    // 2. Jika tidak ada suara laki-laki, ambil suara Arab apa saja (biasanya Google TTS Female di Android)
-    if (!arVoice) {
-      arVoice = voices.find(voice => voice.lang.startsWith("ar") || voice.lang.startsWith("AR"));
-    }
-
-    if (arVoice) {
-      utterance.voice = arVoice;
-      
-      // Jika suara yang terpilih BUKAN suara laki-laki asli (kemungkinan suara wanita), 
-      // kita turunkan nadanya (pitch) agar terdengar lebih berat seperti laki-laki.
-      if (!arVoice.name.match(/Maged|Tarik|Naayf|male/i)) {
-        utterance.pitch = 0.65; // Nada berat (palsu laki-laki)
-      } else {
-        utterance.pitch = 0.95; // Nada asli laki-laki
-      }
-    } else if (voices.length > 0) {
-      console.warn("Suara Bahasa Arab (ar-SA) tidak terdeteksi.");
-      showToast("Suara Arab tidak ditemukan di sistem. Mencoba default browser.", "warning");
-      utterance.pitch = 0.8;
-    } else {
-      console.warn("Daftar suara browser kosong. Mencoba memutar...");
-      utterance.pitch = 0.8;
-    }
-
-    utterance.onstart = () => {
-      if (onStart) onStart();
-    };
-
-    utterance.onend = () => {
-      if (onEnd) onEnd();
-    };
-
-    utterance.onerror = (event) => {
-      if (onEnd) onEnd();
-      console.error("Kesalahan SpeechSynthesis:", event);
-      if (event.error === "language-unavailable") {
-        showToast("Gagal: Paket suara Bahasa Arab tidak terpasang di sistem operasi Anda.", "error");
-      } else if (event.error === "network") {
-        showToast("Gagal: Membutuhkan koneksi internet untuk mengunduh suara online browser.", "error");
-      } else if (event.error === "not-allowed") {
-        showToast("Gagal: Interaksi pengguna diperlukan sebelum memutar suara.", "error");
-      } else {
-        showToast(`Kesalahan suara: ${event.error}`, "error");
-      }
-    };
-
-    window.speechSynthesis.speak(utterance);
-  } else {
-    showToast("Browser Anda tidak mendukung Sintesis Suara.", "error");
-  }
-}
-
-// --- EVENT LISTENERS ---
-function setupEventListeners() {
-  // Theme toggle
-  elements.themeToggleBtn.addEventListener("click", toggleTheme);
-
-  // Tab navigation
-  elements.navbar.addEventListener("click", (e) => {
-    const btn = e.target.closest(".nav-item");
-    if (!btn) return;
-
-    document.querySelectorAll(".nav-item").forEach(item => item.classList.remove("active"));
-    btn.classList.add("active");
-
-    appState.activeTab = btn.dataset.tab;
-    renderActiveTab();
-  });
-
-  // Necessary for TTS voices loading asynchronously in Chrome/Opera
-  if ("speechSynthesis" in window && window.speechSynthesis.onvoiceschanged !== undefined) {
-    window.speechSynthesis.onvoiceschanged = () => {
-      // Just warming up voices cache
-      window.speechSynthesis.getVoices();
-    };
-  }
-}
-
-// --- TOAST NOTIFICATIONS ---
-function showToast(message, type = "info") {
-  const toast = document.createElement("div");
-  toast.className = `toast ${type}`;
-
-  let icon = "bx-info-circle";
-  if (type === "success") icon = "bx-check-circle";
-  if (type === "error") icon = "bx-x-circle";
-
-  toast.innerHTML = `<i class="bx ${icon}"></i><span>${message}</span>`;
-  elements.toastContainer.appendChild(toast);
-
-  setTimeout(() => {
-    toast.style.animation = "slideUp 0.3s ease-in reverse forwards";
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
-}
-
-// --- PROGRESS WIDGET ---
-function updateProgressWidget() {
-  const totalThemes = learningData.themes.length;
-  const completedCount = appState.completedThemes.length;
-  const percentage = totalThemes > 0 ? Math.round((completedCount / totalThemes) * 100) : 0;
-
-  elements.progressPercent.textContent = `${percentage}%`;
-  elements.progressBarFill.style.width = `${percentage}%`;
-}
-
-function completeTheme(themeId) {
-  if (!appState.completedThemes.includes(themeId)) {
-    appState.completedThemes.push(themeId);
-    appStorage.setItem("completedThemes", JSON.stringify(appState.completedThemes));
-    updateProgressWidget();
-    showToast("Hebat! Anda menyelesaikan tema ini 🎉", "success");
-
-    // Refresh theme list in UI if on Learn Tab
-    if (appState.activeTab === "learn") {
-      renderLearnView();
-    }
-  }
 }
 
 // --- TAB ROUTER / RENDERING ---
