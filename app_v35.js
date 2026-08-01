@@ -173,7 +173,7 @@ function checkPremiumStatus(userId) {
       if (result.data && result.data.length > 0) {
         appState.isPremium = result.data[0].is_premium;
         appStorage.setItem('isPremium', appState.isPremium);
-        updateProgressWidget();
+        if (typeof updateProgressWidget === 'function') updateProgressWidget();
       }
     })
     .catch(function(err) {
@@ -293,7 +293,6 @@ function toggleTheme() {
 // --- AUDIO UTILITIES (TTS) ---
 let currentAudio = null;
 
-// Text-to-Speech Helper (Refactored to avoid async)
 function speakArabic(text, onStart = null, onEnd = null) {
   return new Promise(function(resolve, reject) {
     if (!('speechSynthesis' in window)) {
@@ -321,6 +320,143 @@ function speakArabic(text, onStart = null, onEnd = null) {
 
     window.speechSynthesis.speak(utterance);
   });
+}
+
+function fallbackSpeakArabic(text, onStart = null, onEnd = null) {
+  if ("speechSynthesis" in window) {
+    // Batal suara yang sedang berjalan
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "ar-SA";
+    utterance.rate = 0.80; // Diperlambat sedikit agar terdengar lebih luwes (seperti Ustadz)
+    
+    const voices = window.speechSynthesis.getVoices();
+    
+    // 1. Prioritaskan suara laki-laki Arab yang dikenal (Mac/iOS: Maged, Tarik | Windows: Naayf)
+    let arVoice = voices.find(voice => 
+      (voice.lang.startsWith("ar") || voice.lang.startsWith("AR")) && 
+      (voice.name.includes("Maged") || voice.name.includes("Tarik") || voice.name.includes("Naayf") || voice.name.toLowerCase().includes("male"))
+    );
+
+    // 2. Jika tidak ada suara laki-laki, ambil suara Arab apa saja (biasanya Google TTS Female di Android)
+    if (!arVoice) {
+      arVoice = voices.find(voice => voice.lang.startsWith("ar") || voice.lang.startsWith("AR"));
+    }
+
+    if (arVoice) {
+      utterance.voice = arVoice;
+      
+      // Jika suara yang terpilih BUKAN suara laki-laki asli (kemungkinan suara wanita), 
+      // kita turunkan nadanya (pitch) agar terdengar lebih berat seperti laki-laki.
+      if (!arVoice.name.match(/Maged|Tarik|Naayf|male/i)) {
+        utterance.pitch = 0.65; // Nada berat (palsu laki-laki)
+      } else {
+        utterance.pitch = 0.95; // Nada asli laki-laki
+      }
+    } else if (voices.length > 0) {
+      console.warn("Suara Bahasa Arab (ar-SA) tidak terdeteksi.");
+      showToast("Suara Arab tidak ditemukan di sistem. Mencoba default browser.", "warning");
+      utterance.pitch = 0.8;
+    } else {
+      console.warn("Daftar suara browser kosong. Mencoba memutar...");
+      utterance.pitch = 0.8;
+    }
+
+    utterance.onstart = () => {
+      if (onStart) onStart();
+    };
+
+    utterance.onend = () => {
+      if (onEnd) onEnd();
+    };
+
+    utterance.onerror = (event) => {
+      if (onEnd) onEnd();
+      console.error("Kesalahan SpeechSynthesis:", event);
+      if (event.error === "language-unavailable") {
+        showToast("Gagal: Paket suara Bahasa Arab tidak terpasang di sistem operasi Anda.", "error");
+      } else if (event.error === "network") {
+        showToast("Gagal: Membutuhkan koneksi internet untuk mengunduh suara online browser.", "error");
+      } else if (event.error === "not-allowed") {
+        showToast("Gagal: Interaksi pengguna diperlukan sebelum memutar suara.", "error");
+      } else {
+        showToast(`Kesalahan suara: ${event.error}`, "error");
+      }
+    };
+
+    window.speechSynthesis.speak(utterance);
+  } else {
+    showToast("Browser Anda tidak mendukung Sintesis Suara.", "error");
+  }
+}
+
+// --- EVENT LISTENERS ---
+function setupEventListeners() {
+  // Theme toggle
+  elements.themeToggleBtn.addEventListener("click", toggleTheme);
+
+  // Tab navigation
+  elements.navbar.addEventListener("click", (e) => {
+    const btn = e.target.closest(".nav-item");
+    if (!btn) return;
+
+    document.querySelectorAll(".nav-item").forEach(item => item.classList.remove("active"));
+    btn.classList.add("active");
+
+    appState.activeTab = btn.dataset.tab;
+    renderActiveTab();
+  });
+
+  // Necessary for TTS voices loading asynchronously in Chrome/Opera
+  if ("speechSynthesis" in window && window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      // Just warming up voices cache
+      window.speechSynthesis.getVoices();
+    };
+  }
+}
+
+// --- TOAST NOTIFICATIONS ---
+function showToast(message, type = "info") {
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+
+  let icon = "bx-info-circle";
+  if (type === "success") icon = "bx-check-circle";
+  if (type === "error") icon = "bx-x-circle";
+
+  toast.innerHTML = `<i class="bx ${icon}"></i><span>${message}</span>`;
+  elements.toastContainer.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.animation = "slideUp 0.3s ease-in reverse forwards";
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// --- PROGRESS WIDGET ---
+function updateProgressWidget() {
+  const totalThemes = learningData.themes.length;
+  const completedCount = appState.completedThemes.length;
+  const percentage = totalThemes > 0 ? Math.round((completedCount / totalThemes) * 100) : 0;
+
+  elements.progressPercent.textContent = `${percentage}%`;
+  elements.progressBarFill.style.width = `${percentage}%`;
+}
+
+function completeTheme(themeId) {
+  if (!appState.completedThemes.includes(themeId)) {
+    appState.completedThemes.push(themeId);
+    appStorage.setItem("completedThemes", JSON.stringify(appState.completedThemes));
+    updateProgressWidget();
+    showToast("Hebat! Anda menyelesaikan tema ini 🎉", "success");
+
+    // Refresh theme list in UI if on Learn Tab
+    if (appState.activeTab === "learn") {
+      renderLearnView();
+    }
+  }
 }
 
 // --- TAB ROUTER / RENDERING ---
