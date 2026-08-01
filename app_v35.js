@@ -161,7 +161,7 @@ function initAuth() {
   if (token) {
     if (loginOverlay) loginOverlay.style.display = 'none';
     appState.user = { id: localStorage.getItem('sb-user-id') };
-    initApp(appState.user.id);
+    checkPremiumStatus(appState.user.id);
   } else {
     if (loginOverlay) loginOverlay.style.display = 'flex';
   }
@@ -216,7 +216,7 @@ if (loginForm) {
           setTimeout(() => {
             document.getElementById('login-overlay').style.display = 'none';
             appState.user = result.data.user;
-            initApp(appState.user.id);
+            checkPremiumStatus(appState.user.id);
             btn.disabled = false;
             btn.style.opacity = '1';
             txt.innerHTML = "Masuk Sekarang";
@@ -2370,3 +2370,35 @@ function renderNahwuChapter(container, chapter) {
   container.appendChild(completeBtn);
 }
 
+
+
+async function getGeminiDictionaryFallback(query) {
+  try {
+    const prompt = `Anda adalah kamus Arab-Indonesia. Terjemahkan kata berikut: "${query}".
+Balas HANYA dengan JSON valid format berikut:
+{
+  "ar": "tulisan arab berharakat",
+  "latin": "cara baca",
+  "id": "arti indonesia",
+  "category": "Kata Benda / Kata Kerja / Kata Sifat"
+}
+Jangan tambahkan markdown atau teks lain. HANYA JSON.`;
+    
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + appState.aiModel + ':generateContent?key=' + appState.geminiApiKey, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.1 }
+      })
+    });
+    
+    const data = await response.json();
+    let text = data.candidates[0].content.parts[0].text;
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(text);
+  } catch (err) {
+    console.error("Gemini Dict Error:", err);
+    return null;
+  }
+}
