@@ -1226,22 +1226,24 @@ function renderAiView() {
           <option value="madrasah" ${appState.aiScenario === 'madrasah' ? 'selected' : ''}>Di Sekolah</option>
         </optgroup>
         <optgroup label="Premium (SaaS)">
-          <option value="suq" ${appState.aiScenario === 'suq' ? 'selected' : ''}>Di Pasar (Premium)</option>
-          <option value="usrah" ${appState.aiScenario === 'usrah' ? 'selected' : ''}>Keluarga (Premium)</option>
-          <option value="mathar" ${appState.aiScenario === 'mathar' ? 'selected' : ''}>Di Bandara (Premium)</option>
-          <option value="hiwayah" ${appState.aiScenario === 'hiwayah' ? 'selected' : ''}>Hobi (Premium)</option>
-          <option value="mustasyfa" ${appState.aiScenario === 'mustasyfa' ? 'selected' : ''}>Rumah Sakit (Premium)</option>
-          <option value="mihnah" ${appState.aiScenario === 'mihnah' ? 'selected' : ''}>Pekerjaan (Premium)</option>
-          <option value="fushul" ${appState.aiScenario === 'fushul' ? 'selected' : ''}>Cuaca & Musim (Premium)</option>
-          <option value="uthlah" ${appState.aiScenario === 'uthlah' ? 'selected' : ''}>Liburan (Premium)</option>
-          <option value="riyadhah" ${appState.aiScenario === 'riyadhah' ? 'selected' : ''}>Olahraga (Premium)</option>
+          <option value="suq" ${appState.aiScenario === 'suq' ? 'selected' : ''}>Di Pasar ${!appState.isPremium ? '🔒' : ''}</option>
+          <option value="usrah" ${appState.aiScenario === 'usrah' ? 'selected' : ''}>Keluarga ${!appState.isPremium ? '🔒' : ''}</option>
+          <option value="mathar" ${appState.aiScenario === 'mathar' ? 'selected' : ''}>Di Bandara ${!appState.isPremium ? '🔒' : ''}</option>
+          <option value="hiwayah" ${appState.aiScenario === 'hiwayah' ? 'selected' : ''}>Hobi ${!appState.isPremium ? '🔒' : ''}</option>
+          <option value="mustasyfa" ${appState.aiScenario === 'mustasyfa' ? 'selected' : ''}>Rumah Sakit ${!appState.isPremium ? '🔒' : ''}</option>
+          <option value="mihnah" ${appState.aiScenario === 'mihnah' ? 'selected' : ''}>Pekerjaan ${!appState.isPremium ? '🔒' : ''}</option>
+          <option value="fushul" ${appState.aiScenario === 'fushul' ? 'selected' : ''}>Cuaca & Musim ${!appState.isPremium ? '🔒' : ''}</option>
+          <option value="uthlah" ${appState.aiScenario === 'uthlah' ? 'selected' : ''}>Liburan ${!appState.isPremium ? '🔒' : ''}</option>
+          <option value="riyadhah" ${appState.aiScenario === 'riyadhah' ? 'selected' : ''}>Olahraga ${!appState.isPremium ? '🔒' : ''}</option>
         </optgroup>
       </select>
       <button id="inlineClearChatBtn" title="Hapus Riwayat Chat" style="width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--card-border); background: var(--glass-bg); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--error);">
         <i class="bx bx-trash"></i>
       </button>
     </div>
-    <img src="ustadz_avatar_1784090905001.jpg" alt="Ustadz Al-Hiwar">
+    <div class="ai-3d-avatar-container">
+      <img src="talkpal_avatar.png" alt="AI Tutor" class="ai-3d-avatar idle" id="aiAvatarImg">
+    </div>
   `;
 
   // 30% Chat Area
