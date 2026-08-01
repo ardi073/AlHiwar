@@ -324,6 +324,7 @@ async function speakArabic(text, onStart = null, onEnd = null) {
     console.error("Koneksi ke backend TTS gagal:", err);
     fallbackSpeakArabic(text, null, onEnd);
   }
+}
 // Text-to-Speech Helper (Refactored to avoid async)
 function speakArabic(text, onStart = null, onEnd = null) {
   return new Promise(function(resolve, reject) {
@@ -494,6 +495,12 @@ function completeTheme(themeId) {
 // --- TAB ROUTER / RENDERING ---
 function renderActiveTab() {
   elements.mainContent.innerHTML = "";
+  
+  if (appState.activeTab === "ai") {
+    document.body.classList.add("ai-fullscreen-mode");
+  } else {
+    document.body.classList.remove("ai-fullscreen-mode");
+  }
 
   switch (appState.activeTab) {
     case "dashboard":
@@ -1245,10 +1252,7 @@ function renderAiView() {
   avatarArea.className = "ai-avatar-area";
   avatarArea.innerHTML = `
     <div style="position: absolute; top: 15px; left: 15px; z-index: 5; display: flex; gap: 8px; align-items: center;">
-      <button id="aiCloseBtn" title="Tutup Tutor AI" style="width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--card-border); background: var(--glass-bg); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-primary); margin-right: 5px;">
-          <i class='bx bx-chevron-down' style="font-size: 24px;"></i>
-        </button>
-        <select id="inlineScenarioSelect" style="padding: 8px 12px; border-radius: 20px; border: 1px solid var(--card-border); background: var(--glass-bg); backdrop-filter: blur(8px); font-family: var(--font-primary); font-size: 13px; font-weight: 600; color: var(--text-secondary); outline: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05); max-width: 200px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+      <select id="inlineScenarioSelect" style="padding: 8px 12px; border-radius: 20px; border: 1px solid var(--card-border); background: var(--glass-bg); backdrop-filter: blur(8px); font-family: var(--font-primary); font-size: 13px; font-weight: 600; color: var(--text-secondary); outline: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.05); max-width: 200px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
         <optgroup label="Gratis (Trial)">
           <option value="taaruf" ${appState.aiScenario === 'taaruf' ? 'selected' : ''}>Perkenalan</option>
           <option value="matham" ${appState.aiScenario === 'matham' ? 'selected' : ''}>Di Restoran</option>
@@ -1305,13 +1309,6 @@ function renderAiView() {
   const voiceInputIdBtn = layout.querySelector("#voiceInputIdBtn");
   const voiceInputArBtn = layout.querySelector("#voiceInputArBtn");
   const scenarioSelect = layout.querySelector("#inlineScenarioSelect");
-  const closeBtn = layout.querySelector("#aiCloseBtn");
-  if (closeBtn) {
-    closeBtn.addEventListener("click", () => {
-      appState.activeTab = "dashboard";
-      renderActiveTab();
-    });
-  }
   const clearChatBtn = layout.querySelector("#inlineClearChatBtn");
 
   // Render current chat history
