@@ -28,6 +28,7 @@ export default function RootLayout({
         <Script src="/data/theme-mathar.js" strategy="beforeInteractive" />
         <Script src="/data/theme-hiwayah.js" strategy="beforeInteractive" />
         <Script src="/data/theme-mustasyfa.js" strategy="beforeInteractive" />
+        <Script src="/data/nahwu.js" strategy="beforeInteractive" />
         
         {children}
       </body>
