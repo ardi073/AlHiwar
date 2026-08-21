@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import Header from '@/components/Header';
 import { useAudioChat } from '@/lib/audio/useAudioChat';
 import { ChevronDown, Trash2, Mic, Play, Volume2, Lock } from 'lucide-react';
@@ -9,8 +9,6 @@ export default function ChatPage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedScenario, setSelectedScenario] = useState('Perkenalan');
   
-  // Local mock state for chat history since useAudioChat gives feedbacks, 
-  // but we want a chat-like interface.
   const [chatHistory, setChatHistory] = useState([
     {
       sender: 'ai',
@@ -98,7 +96,6 @@ export default function ChatPage() {
 
           {/* Avatar Image */}
           <div className="relative w-full aspect-square bg-blue-50 rounded-2xl overflow-hidden mb-6 flex items-center justify-center">
-            {/* Fallback to simple icon since we can't reliably load the user's local image right now, we will add an img tag */}
             <img src="/ustadz_avatar.png" alt="Tutor" className={`w-full h-full object-cover transition-transform duration-700 ${isAiSpeaking ? 'scale-105' : 'scale-100'}`} onError={(e) => (e.currentTarget.src = 'https://ui-avatars.com/api/?name=Ustadz&background=0D8ABC&color=fff&size=256')} />
           </div>
 
@@ -176,17 +173,31 @@ export default function ChatPage() {
           </div>
 
           <div className="p-6 bg-white border-t border-slate-200 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.05)]">
-            <button 
-              onClick={status === 'Live' ? stopSession : startSession}
-              className={`w-full flex items-center justify-center gap-3 py-5 rounded-2xl text-lg font-black transition-all ${
-                status === 'Live' 
-                ? 'bg-red-50 text-red-500 hover:bg-red-100 border border-red-100' 
-                : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100 shadow-lg shadow-emerald-600/20'
-              }`}
-            >
-              <Mic size={24} className={status === 'Live' ? 'animate-pulse' : ''} />
-              {status === 'Live' ? 'Berhenti Bicara' : 'Bicara (Arab)'}
-            </button>
+            <div className="flex gap-4 w-full">
+              <button 
+                onClick={status === 'Live' ? stopSession : startSession}
+                className={`flex-1 flex flex-col items-center justify-center gap-2 py-4 rounded-2xl text-base font-black transition-all ${
+                  status === 'Live' 
+                  ? 'bg-red-50 text-red-500 hover:bg-red-100 border border-red-100' 
+                  : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 shadow-sm'
+                }`}
+              >
+                <Mic size={24} className={status === 'Live' ? 'animate-pulse text-red-500' : 'text-red-500'} />
+                Bicara (Indo)
+              </button>
+              
+              <button 
+                onClick={status === 'Live' ? stopSession : startSession}
+                className={`flex-1 flex flex-col items-center justify-center gap-2 py-4 rounded-2xl text-base font-black transition-all ${
+                  status === 'Live' 
+                  ? 'bg-red-50 text-red-500 hover:bg-red-100 border border-red-100' 
+                  : 'bg-white text-emerald-700 hover:bg-emerald-50 border border-emerald-500 shadow-sm'
+                }`}
+              >
+                <Mic size={24} className={status === 'Live' ? 'animate-pulse text-red-500' : 'text-emerald-600'} />
+                Bicara (Arab)
+              </button>
+            </div>
           </div>
         </div>
 
