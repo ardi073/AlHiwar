@@ -2,73 +2,82 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LogOut, LogIn, User } from 'lucide-react';
+import { BookOpen, LogOut, Moon, Home, MessageSquare, Layers, Brain, Search, Edit3, Bot } from 'lucide-react';
 
 export default function Header() {
   const pathname = usePathname();
-  // Mock login state for now
   const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    alert("Logged out successfully"); // Mock action
+    alert('Logged out successfully');
   };
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-    alert("Logged in successfully"); // Mock action
-  };
+  const navItems = [
+    { label: 'Dashboard', icon: Home, href: '/' },
+    { label: 'Percakapan', icon: MessageSquare, href: '/percakapan' },
+    { label: 'Kosakata', icon: Layers, href: '/kosakata' },
+    { label: 'Kuis', icon: Brain, href: '/kuis' },
+    { label: 'Kamus', icon: Search, href: '/kamus' },
+    { label: 'Nahwu Shorof', icon: Edit3, href: '/nahwu' },
+    { label: 'Tutor AI', icon: Bot, href: '/chat' },
+  ];
 
   return (
-    <header className="absolute top-0 w-full z-40 bg-blue-600 shadow-md">
-      <div className="max-w-7xl mx-auto w-full flex items-center justify-between px-6 py-4">
-        
-        {/* Brand & Nav */}
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white text-blue-600 font-bold text-xl shadow-sm">
-              <User size={20} />
+    <header className="w-full bg-slate-50 relative z-40 border-b border-slate-200 shadow-sm">
+      <div className="max-w-6xl mx-auto w-full px-4 sm:px-6">
+        <div className="flex items-center justify-between py-6">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-12 h-12 bg-blue-600 text-white rounded-xl shadow-md">
+              <BookOpen size={24} />
             </div>
-            <h1 className="font-extrabold text-xl tracking-tight text-white">Al-Hiwar</h1>
+            <div>
+              <h1 className="text-2xl font-black text-slate-800 flex items-center gap-2">
+                Al-Hiwar <span className="text-orange-400 font-serif font-normal text-xl">الحوار</span>
+              </h1>
+              <p className="text-sm font-medium text-slate-500">Platform Belajar Bahasa Arab</p>
+            </div>
           </div>
-          
-          <nav className="hidden md:flex items-center gap-1 bg-blue-700/50 p-1 rounded-full">
-            <Link 
-              href="/chat" 
-              className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${pathname === '/chat' ? 'bg-white text-blue-600 shadow-sm' : 'text-blue-100 hover:bg-blue-600/50'}`}
-            >
-              Chat
-            </Link>
-            <Link 
-              href="/kamus" 
-              className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${pathname === '/kamus' ? 'bg-white text-blue-600 shadow-sm' : 'text-blue-100 hover:bg-blue-600/50'}`}
-            >
-              Kamus
-            </Link>
-          </nav>
+          <div className="flex items-center gap-6">
+            <div className="hidden md:flex flex-col items-end">
+              <span className="text-xs font-bold text-slate-500 mb-1">Progres: 0%</span>
+              <div className="w-32 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-500 w-0"></div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="p-2.5 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
+                <Moon size={20} />
+              </button>
+              {isLoggedIn && (
+                <button 
+                  onClick={handleLogout}
+                  title="Log Out"
+                  className="p-2.5 rounded-full bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition-colors"
+                >
+                  <LogOut size={20} />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-
-        {/* Actions (Login / Logout) */}
-        <div className="flex items-center gap-3">
-          {isLoggedIn ? (
-            <button 
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold transition-colors shadow-sm"
-            >
-              <LogOut size={16} />
-              <span>Log Out</span>
-            </button>
-          ) : (
-            <button 
-              onClick={handleLogin}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-white hover:bg-gray-100 text-blue-600 text-sm font-semibold transition-colors shadow-sm"
-            >
-              <LogIn size={16} />
-              <span>Sign In</span>
-            </button>
-          )}
-        </div>
-        
+        <nav className="flex items-center overflow-x-auto border-t border-slate-100 pt-2">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || (pathname === '/chat' && item.href === '/chat');
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex flex-col items-center justify-center min-w-[100px] flex-1 py-3 px-2 gap-1.5 border-b-4 transition-all ${isActive ? 'border-blue-600 text-blue-600 bg-blue-50/50' : 'border-transparent text-slate-500 hover:text-blue-500 hover:bg-slate-50'}`}
+              >
+                <item.icon size={20} className={isActive ? 'text-blue-600' : 'text-slate-400'} />
+                <span className={`text-sm ${isActive ? 'font-bold' : 'font-semibold'}`}>
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
       </div>
     </header>
   );
