@@ -11,7 +11,6 @@ export default function ActionBar({ status, onToggleMic }: ActionBarProps) {
   const isConnecting = status === 'Connecting';
 
   return (
-  return (
     <footer className="absolute bottom-0 w-full px-4 sm:px-6 py-6 pb-8 bg-gradient-to-t from-slate-50 via-slate-50/95 to-transparent z-30 pointer-events-none">
       <div className="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between relative gap-6 md:gap-0 pointer-events-auto">
         
@@ -71,3 +70,4 @@ export default function ActionBar({ status, onToggleMic }: ActionBarProps) {
     </footer>
   );
 }
+
