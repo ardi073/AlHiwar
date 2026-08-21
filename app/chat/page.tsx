@@ -1,15 +1,13 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
-import { useAudioChat } from '@/lib/audio/useAudioChat';
-import { ChevronDown, Trash2, Mic, Play, Volume2, Lock } from 'lucide-react';
+import { ChevronDown, Trash2, Mic, Volume2, Lock } from 'lucide-react';
 
 export default function ChatPage() {
-  const { status, volume, feedbacks, startSession, stopSession } = useAudioChat();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedScenario, setSelectedScenario] = useState('Perkenalan');
   
-  const [chatHistory, setChatHistory] = useState([
+  const [chatHistory, setChatHistory] = useState<{sender: string, ar: string, latin?: string, id?: string}[]>([
     {
       sender: 'ai',
       ar: 'السَّلَامُ عَلَيْكُمْ! أَنَا أُسْتَاذُ الْحِوَار. كَيْفَ حَالُكَ الْيَوْمَ؟',
@@ -17,33 +15,100 @@ export default function ChatPage() {
       id: 'Semoga keselamatan tercurah untukmu! Saya Ustadz Al-Hiwar. Bagaimana kabarmu hari ini?'
     }
   ]);
+  
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
+  const [isListening, setIsListening] = useState<string | null>(null); // 'id-ID' or 'ar-SA' or null
+  const [isThinking, setIsThinking] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   const scenarios = [
     { type: 'Gratis (Trial)', items: ['Perkenalan', 'Di Restoran', 'Di Sekolah'] },
     { type: 'Premium (SaaS)', items: ['Di Pasar', 'Keluarga', 'Di Bandara', 'Hobi', 'Rumah Sakit', 'Pekerjaan', 'Cuaca & Musim'] }
   ];
 
-  const checkPremiumAccess = (item: string) => {
-    return scenarios[0].items.includes(item);
-  };
+  const checkPremiumAccess = (item: string) => scenarios[0].items.includes(item);
 
-  const playArabic = (text: string) => {
+  // Auto scroll to bottom
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatHistory, isThinking]);
+
+  const playTTS = (text: string, lang: string) => {
     setIsAiSpeaking(true);
     const synth = window.speechSynthesis;
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ar-SA';
+    utterance.lang = lang;
     utterance.onend = () => setIsAiSpeaking(false);
     synth.speak(utterance);
   };
 
-  const playIndo = (text: string) => {
-    setIsAiSpeaking(true);
-    const synth = window.speechSynthesis;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'id-ID';
-    utterance.onend = () => setIsAiSpeaking(false);
-    synth.speak(utterance);
+  const getSimulatorResponse = (text: string) => {
+    const cleanText = text.toLowerCase();
+    
+    // Simple mock AI logic matching legacy app
+    let response = {
+      sender: 'ai',
+      ar: 'عُذْرًا، لَمْ أَفْهَمْ جَيِّدًا. هَلْ يُمْكِنُكَ إِعَادَةُ ذَلِكَ؟',
+      latin: 'Udzran, lam afham jayyidan. Hal yumkinuka i\'aadatu dzaalika?',
+      id: 'Maaf, saya kurang paham. Bisakah Anda mengulanginya?'
+    };
+
+    if (cleanText.includes("nama") || cleanText.includes("ismi") || cleanText.includes("saya")) {
+      response = {
+        sender: "ai",
+        ar: "مَا شَاءَ اللَّهُ! وَكَيْفَ حَالُكَ الْيَوْمَ؟ هَلْ أَنْتَ بِخَيْرٍ؟",
+        latin: "Maa syaa Allah! Wa kaifa haalukal yauma? Hal anta bikhairin?",
+        id: "Masya Allah! Dan bagaimana kabarmu hari ini? Apakah kamu baik-baik saja?"
+      };
+    } else if (cleanText.includes("baik") || cleanText.includes("alhamdulillah")) {
+      response = {
+        sender: "ai",
+        ar: "الْحَمْدُ لِلَّهِ! هَلْ أَنْتَ طَالِبٌ أَمْ مُوَظَّفٌ؟",
+        latin: "Alhamdulillah! Hal anta thaalibun am muwadhdhafun?",
+        id: "Alhamdulillah! Apakah kamu seorang mahasiswa atau karyawan?"
+      };
+    }
+
+    setTimeout(() => {
+      setChatHistory(prev => [...prev, response]);
+      setIsThinking(false);
+    }, 1500);
+  };
+
+  const startListening = (lang: string) => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Browser Anda tidak mendukung fitur Suara (Gunakan Chrome).");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = lang;
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(lang);
+    };
+
+    recognition.onerror = (e: any) => {
+      console.error("STT Error:", e.error);
+      setIsListening(null);
+    };
+
+    recognition.onend = () => {
+      setIsListening(null);
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setChatHistory(prev => [...prev, { sender: 'user', ar: transcript }]);
+      setIsListening(null);
+      setIsThinking(true);
+      getSimulatorResponse(transcript);
+    };
+
+    recognition.start();
   };
 
   return (
@@ -54,8 +119,6 @@ export default function ChatPage() {
         
         {/* Left column: Avatar and Info */}
         <div className="w-[350px] p-6 flex flex-col items-center bg-white border-r border-slate-200 shadow-sm relative z-10">
-          
-          {/* Dropdown */}
           <div className="w-full relative mb-8">
             <button 
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -94,14 +157,15 @@ export default function ChatPage() {
             )}
           </div>
 
-          {/* Avatar Image */}
           <div className="relative w-full aspect-square bg-blue-50 rounded-2xl overflow-hidden mb-6 flex items-center justify-center">
             <img src="/ustadz_avatar.png" alt="Tutor" className={`w-full h-full object-cover transition-transform duration-700 ${isAiSpeaking ? 'scale-105' : 'scale-100'}`} onError={(e) => (e.currentTarget.src = 'https://ui-avatars.com/api/?name=Ustadz&background=0D8ABC&color=fff&size=256')} />
           </div>
 
           <div className="text-center w-full">
             <h2 className="text-xl font-bold text-slate-800">Ustadz Al-Hiwar</h2>
-            <p className="text-sm font-medium text-slate-500 mb-4">{isAiSpeaking ? 'Sedang berbicara...' : status === 'Live' ? 'Mendengarkan...' : 'Aktif (Idle)'}</p>
+            <p className="text-sm font-medium text-slate-500 mb-4">
+              {isAiSpeaking ? 'Sedang berbicara...' : isThinking ? 'Sedang mengetik...' : isListening ? 'Mendengarkan...' : 'Aktif (Idle)'}
+            </p>
             
             <button 
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-colors text-sm"
@@ -123,78 +187,80 @@ export default function ChatPage() {
               return (
                 <div key={idx} className={`flex w-full ${isAi ? 'justify-start' : 'justify-end'}`}>
                   <div className={`max-w-[85%] ${isAi ? 'items-start' : 'items-end'}`}>
-                    <div className={`relative group rounded-3xl p-6 shadow-sm border ${isAi ? 'bg-white border-slate-200 rounded-tl-none' : 'bg-blue-600 border-blue-700 rounded-tr-none text-white'}`}>
-                      <p className={`font-serif text-3xl leading-relaxed mb-4 text-right ${isAi ? 'text-slate-800' : 'text-white'}`} dir="rtl">
+                    <div className={`text-xs font-bold text-slate-400 mb-1 ${!isAi && 'text-right'}`}>
+                      {isAi ? 'Ustadz Al-Hiwar' : 'Anda'}
+                    </div>
+                    <div className={`relative group rounded-3xl p-6 shadow-sm border ${isAi ? 'bg-white border-slate-200 rounded-tl-none' : 'bg-blue-50 border-blue-100 rounded-tr-none'}`}>
+                      <p className={`font-serif text-3xl leading-relaxed text-right text-slate-800 ${isAi ? 'mb-4' : ''}`} dir="rtl">
                         {msg.ar}
                       </p>
-                      <p className={`font-medium mb-1 ${isAi ? 'text-slate-600' : 'text-blue-100'}`}>{msg.latin}</p>
-                      <p className={`text-sm ${isAi ? 'text-slate-500' : 'text-blue-200'}`}>{msg.id}</p>
                       
                       {isAi && (
-                        <div className="absolute -bottom-4 right-6 flex gap-2">
-                          <button
-                            title="Dengar (Arab)"
-                            onClick={() => playArabic(msg.ar)}
-                            className="w-10 h-10 bg-white border border-slate-200 shadow-md rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-50 hover:scale-105 transition-transform"
-                          >
-                            <Volume2 size={18} />
-                          </button>
-                          <button
-                            title="Dengar (Indo)"
-                            onClick={() => playIndo(msg.id)}
-                            className="w-10 h-10 bg-slate-100 border border-slate-200 shadow-md rounded-full flex items-center justify-center text-emerald-600 hover:bg-emerald-50 hover:scale-105 transition-transform font-bold text-[10px]"
-                          >
-                            ID
-                          </button>
-                        </div>
+                        <>
+                          <p className="font-medium mb-1 text-slate-600">{msg.latin}</p>
+                          <p className="text-sm text-slate-500">{msg.id}</p>
+                          <div className="absolute -bottom-4 right-6 flex gap-2">
+                            <button
+                              title="Dengar (Arab)"
+                              onClick={() => playTTS(msg.ar, 'ar-SA')}
+                              className="w-10 h-10 bg-white border border-slate-200 shadow-md rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-50 hover:scale-105 transition-transform"
+                            >
+                              <Volume2 size={18} />
+                            </button>
+                            <button
+                              title="Dengar (Indo)"
+                              onClick={() => playTTS(msg.id || '', 'id-ID')}
+                              className="w-10 h-10 bg-slate-100 border border-slate-200 shadow-md rounded-full flex items-center justify-center text-emerald-600 hover:bg-emerald-50 hover:scale-105 transition-transform font-bold text-[10px]"
+                            >
+                              ID
+                            </button>
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>
                 </div>
               );
             })}
-            {feedbacks.length > 0 && feedbacks.map(fb => (
-              <div key={fb.id} className="flex w-full justify-end">
-                <div className="max-w-[85%] items-end">
-                  <div className="bg-blue-50 border border-blue-100 rounded-3xl p-4 shadow-sm text-right">
-                    <p className="text-slate-800 text-sm">Anda (Suara):</p>
-                    <p className="font-serif text-xl mt-2">{fb.originalText}</p>
-                    {fb.correctedText && (
-                      <div className="mt-3 p-3 bg-emerald-50 rounded-xl text-left border border-emerald-100">
-                        <p className="text-xs font-bold text-emerald-600">Koreksi Tutor:</p>
-                        <p className="font-serif text-lg text-emerald-900 mt-1" dir="rtl">{fb.correctedText}</p>
-                        <p className="text-sm text-emerald-700 mt-1">{fb.explanation}</p>
-                      </div>
-                    )}
+            
+            {isThinking && (
+              <div className="flex w-full justify-start">
+                <div className="max-w-[85%] items-start">
+                  <div className="bg-white border border-slate-200 rounded-3xl rounded-tl-none p-6 shadow-sm flex items-center gap-2">
+                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                   </div>
                 </div>
               </div>
-            ))}
+            )}
+            
+            <div ref={chatEndRef} />
           </div>
 
           <div className="p-6 bg-white border-t border-slate-200 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.05)]">
             <div className="flex gap-4 w-full">
               <button 
-                onClick={status === 'Live' ? stopSession : startSession}
+                onClick={() => startListening('id-ID')}
                 className={`flex-1 flex flex-col items-center justify-center gap-2 py-4 rounded-2xl text-base font-black transition-all ${
-                  status === 'Live' 
+                  isListening === 'id-ID' 
                   ? 'bg-red-50 text-red-500 hover:bg-red-100 border border-red-100' 
                   : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 shadow-sm'
                 }`}
               >
-                <Mic size={24} className={status === 'Live' ? 'animate-pulse text-red-500' : 'text-red-500'} />
+                <Mic size={24} className={isListening === 'id-ID' ? 'animate-pulse text-red-500' : 'text-red-500'} />
                 Bicara (Indo)
               </button>
               
               <button 
-                onClick={status === 'Live' ? stopSession : startSession}
+                onClick={() => startListening('ar-SA')}
                 className={`flex-1 flex flex-col items-center justify-center gap-2 py-4 rounded-2xl text-base font-black transition-all ${
-                  status === 'Live' 
+                  isListening === 'ar-SA' 
                   ? 'bg-red-50 text-red-500 hover:bg-red-100 border border-red-100' 
                   : 'bg-white text-emerald-700 hover:bg-emerald-50 border border-emerald-500 shadow-sm'
                 }`}
               >
-                <Mic size={24} className={status === 'Live' ? 'animate-pulse text-red-500' : 'text-emerald-600'} />
+                <Mic size={24} className={isListening === 'ar-SA' ? 'animate-pulse text-red-500' : 'text-emerald-600'} />
                 Bicara (Arab)
               </button>
             </div>
