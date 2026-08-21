@@ -140,10 +140,15 @@ export default function KuisPage() {
               </div>
 
               {/* Question Card */}
-              <div className="w-full bg-white p-8 rounded-3xl shadow-sm border border-slate-200 mb-6">
+              <div className="w-full bg-white p-8 rounded-3xl shadow-sm border border-slate-200 mb-6 flex flex-col items-center justify-center gap-4">
                 <h2 className="text-xl md:text-2xl font-bold text-slate-800 text-center leading-relaxed">
-                  {currentQ.q}
+                  {currentQ.question}
                 </h2>
+                {currentQ.arabic && (
+                  <p className="text-3xl font-serif text-slate-700 text-center" dir="rtl">
+                    {currentQ.arabic}
+                  </p>
+                )}
               </div>
 
               {/* Options */}
