@@ -51,7 +51,7 @@ export default function ChatPage() {
           userText: text,
           aiScenario: selectedScenario,
           aiChatHistory: chatHistory,
-          aiModel: 'gemini-pro'
+          aiModel: 'gemini-3.5-flash-lite'
         })
       });
 
