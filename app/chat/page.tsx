@@ -42,37 +42,51 @@ export default function ChatPage() {
     synth.speak(utterance);
   };
 
-  const getSimulatorResponse = (text: string) => {
-    const cleanText = text.toLowerCase();
-    
-    // Simple mock AI logic matching legacy app
-    let response = {
-      sender: 'ai',
-      ar: 'عُذْرًا، لَمْ أَفْهَمْ جَيِّدًا. هَلْ يُمْكِنُكَ إِعَادَةُ ذَلِكَ؟',
-      latin: 'Udzran, lam afham jayyidan. Hal yumkinuka i\'aadatu dzaalika?',
-      id: 'Maaf, saya kurang paham. Bisakah Anda mengulanginya?'
-    };
+  const getGeminiResponse = async (text: string) => {
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userText: text,
+          aiScenario: selectedScenario,
+          aiChatHistory: chatHistory,
+          aiModel: 'gemini-1.5-flash'
+        })
+      });
 
-    if (cleanText.includes("nama") || cleanText.includes("ismi") || cleanText.includes("saya")) {
-      response = {
-        sender: "ai",
-        ar: "مَا شَاءَ اللَّهُ! وَكَيْفَ حَالُكَ الْيَوْمَ؟ هَلْ أَنْتَ بِخَيْرٍ؟",
-        latin: "Maa syaa Allah! Wa kaifa haalukal yauma? Hal anta bikhairin?",
-        id: "Masya Allah! Dan bagaimana kabarmu hari ini? Apakah kamu baik-baik saja?"
-      };
-    } else if (cleanText.includes("baik") || cleanText.includes("alhamdulillah")) {
-      response = {
-        sender: "ai",
-        ar: "الْحَمْدُ لِلَّهِ! هَلْ أَنْتَ طَالِبٌ أَمْ مُوَظَّفٌ؟",
-        latin: "Alhamdulillah! Hal anta thaalibun am muwadhdhafun?",
-        id: "Alhamdulillah! Apakah kamu seorang mahasiswa atau karyawan?"
-      };
-    }
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error.message || 'API Error');
+      }
 
-    setTimeout(() => {
-      setChatHistory(prev => [...prev, response]);
+      if (data.candidates && data.candidates[0].content.parts[0].text) {
+        const rawText = data.candidates[0].content.parts[0].text.trim();
+        const lines = rawText.split('\\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+        
+        const ar = lines[0] || '';
+        const latin = lines[1] || '';
+        const id = lines.slice(2).join('\\n') || '';
+
+        setChatHistory(prev => [...prev, {
+          sender: 'ai',
+          ar: ar,
+          latin: latin,
+          id: id
+        }]);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setChatHistory(prev => [...prev, {
+        sender: 'ai',
+        ar: 'عُذْرًا، حَصَلَ خَطَأٌ فِي الِاتِّصَالِ بِالْخَادِمِ.',
+        latin: '[Khatha\'un fii ittishaal]',
+        id: 'Gagal memanggil API: ' + (err.message || 'Kesalahan jaringan') + '\\nPastikan API Key sudah diatur di environment.'
+      }]);
+    } finally {
       setIsThinking(false);
-    }, 1500);
+    }
   };
 
   const startListening = (lang: string) => {
@@ -105,7 +119,7 @@ export default function ChatPage() {
       setChatHistory(prev => [...prev, { sender: 'user', ar: transcript }]);
       setIsListening(null);
       setIsThinking(true);
-      getSimulatorResponse(transcript);
+      getGeminiResponse(transcript);
     };
 
     recognition.start();
