@@ -41,7 +41,7 @@ Aturan respon Anda:
       return NextResponse.json({ error: { message: 'API Key Backend Belum Dikonfigurasi (GEMINI_API_KEY)' } }, { status: 500 });
     }
 
-    const modelToUse = aiModel || 'gemini-1.5-flash';
+    const modelToUse = aiModel || 'gemini-pro';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
