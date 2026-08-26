@@ -58,8 +58,8 @@ export default function PercakapanTab() {
   const isCompleted = completedThemes.includes(activeThemeId);
 
   return (
-    <div className="flex-1 flex flex-col w-full h-full relative overflow-hidden"><main className="flex-1 flex overflow-hidden">
-        <div className="w-80 bg-white border-r border-slate-200 flex flex-col h-full overflow-hidden shadow-sm z-10">
+    <div className="flex-1 flex flex-col w-full h-full relative overflow-hidden"><main className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        <div className="w-full shrink-0 h-[40%] md:h-full md:w-80 bg-white border-r border-slate-200 flex flex-col h-full overflow-hidden shadow-sm z-10">
           <div className="p-4 border-b border-slate-100 bg-slate-50/50">
             <h3 className="font-bold text-slate-800 text-lg">Daftar Tema</h3>
           </div>

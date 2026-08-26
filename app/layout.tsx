@@ -8,6 +8,8 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Al-Hiwar | Platform Belajar Bahasa Arab",
   description: "Platform edukasi interaktif belajar percakapan Bahasa Arab dengan Tutor AI.",
+  manifest: "/manifest.json",
+  themeColor: "#2563eb",
 };
 
 export default function RootLayout({
@@ -31,6 +33,11 @@ export default function RootLayout({
         <Script src="/data/nahwu.js" strategy="beforeInteractive" />
         
         {children}
+        <script dangerouslySetInnerHTML={{ __html: `
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('/sw.js');
+        }
+      `}} />
       </body>
     </html>
   );
