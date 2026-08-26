@@ -129,7 +129,7 @@ export default function ChatTab() {
       <div className="flex-1 flex w-full max-w-6xl mx-auto h-full overflow-hidden">
         
         {/* Left column: Avatar and Info */}
-        <div className="w-[350px] p-6 flex flex-col items-center bg-white border-r border-slate-200 shadow-sm relative z-10">
+        <div className="w-full shrink-0 h-auto md:h-full md:w-[350px] p-6 flex flex-col items-center bg-white border-b md:border-b-0 md:border-r border-slate-200 shadow-sm relative z-10">
           <div className="w-full relative mb-8">
             <button 
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
