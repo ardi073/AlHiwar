@@ -1,9 +1,8 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import Header from '@/components/Header';
 import { ChevronDown, Trash2, Mic, Volume2, Lock } from 'lucide-react';
 
-export default function ChatPage() {
+export default function ChatTab() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedScenario, setSelectedScenario] = useState('Perkenalan');
   
@@ -127,8 +126,6 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-screen w-full bg-slate-50 text-slate-900 overflow-hidden relative font-sans flex-col">
-      <Header />
-      
       <div className="flex-1 flex w-full max-w-6xl mx-auto h-full overflow-hidden">
         
         {/* Left column: Avatar and Info */}

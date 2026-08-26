@@ -1,9 +1,8 @@
 "use client";
 import { useEffect, useState } from 'react';
-import Header from '@/components/Header';
 import { Book, Lock, CheckCircle2, Info, Table, CheckSquare } from 'lucide-react';
 
-export default function NahwuPage() {
+export default function NahwuTab() {
   const [chapters, setChapters] = useState<any[]>([]);
   const [activeChapterId, setActiveChapterId] = useState<string>('');
   const [completedChapters, setCompletedChapters] = useState<string[]>([]);
@@ -38,9 +37,7 @@ export default function NahwuPage() {
 
   if (chapters.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-        <Header />
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+      <div className="flex-1 flex flex-col w-full h-full relative overflow-hidden"><div className="flex-1 flex flex-col items-center justify-center gap-4">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
           <p className="text-slate-500 font-medium">Memuat modul Nahwu Shorof...</p>
         </div>
@@ -51,10 +48,7 @@ export default function NahwuPage() {
   const isCompleted = completedChapters.includes(activeChapterId);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans h-screen overflow-hidden">
-      <Header />
-      
-      <main className="flex-1 flex overflow-hidden">
+    <div className="flex-1 flex flex-col w-full h-full relative overflow-hidden"><main className="flex-1 flex overflow-hidden">
         {/* Left Sidebar */}
         <div className="w-80 bg-white border-r border-slate-200 flex flex-col h-full overflow-hidden shadow-sm z-10">
           <div className="p-4 border-b border-slate-100 bg-slate-50/50">

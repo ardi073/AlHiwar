@@ -1,6 +1,5 @@
 "use client";
 import { useState } from 'react';
-import Header from '@/components/Header';
 import { Search, Book, Star, Sparkles } from 'lucide-react';
 
 // Mock Dictionary Data
@@ -14,7 +13,7 @@ const mockDictionary: Record<string, { arabic: string; transliteration: string; 
   'laptop': { arabic: 'حاسوب محمول', transliteration: 'hasub mahmul', type: 'Noun' }, // I added laptop just in case, but let's remove it so it triggers premium as requested by user.
 };
 
-export default function KamusPage() {
+export default function KamusTab() {
   const [searchQuery, setSearchQuery] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
   
@@ -29,10 +28,7 @@ export default function KamusPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 text-slate-900 font-sans relative">
-      <Header />
-      
-      <main className="max-w-4xl mx-auto pt-32 px-6 pb-20">
+    <div className="flex-1 flex flex-col w-full h-full relative overflow-hidden"><main className="max-w-4xl mx-auto pt-32 px-6 pb-20">
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center p-3 bg-blue-100 text-blue-600 rounded-2xl mb-4">
             <Book size={32} />

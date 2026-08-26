@@ -1,9 +1,8 @@
 "use client";
 import { useEffect, useState } from 'react';
-import Header from '@/components/Header';
 import { Volume2, Star, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 
-export default function KosakataPage() {
+export default function KosakataTab() {
   const [themes, setThemes] = useState<any[]>([]);
   const [activeThemeId, setActiveThemeId] = useState<string>('');
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -65,9 +64,7 @@ export default function KosakataPage() {
 
   if (themes.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-        <Header />
-        <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex flex-col w-full h-full relative overflow-hidden"><div className="flex-1 flex items-center justify-center">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
@@ -75,10 +72,7 @@ export default function KosakataPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans h-screen overflow-hidden">
-      <Header />
-      
-      <main className="flex-1 flex flex-col items-center p-8 overflow-y-auto w-full max-w-4xl mx-auto">
+    <div className="flex-1 flex flex-col w-full h-full relative overflow-hidden"><main className="flex-1 flex flex-col items-center p-8 overflow-y-auto w-full max-w-4xl mx-auto">
         
         {/* Theme Selector Dropdown */}
         <div className="w-full max-w-md mb-8">
