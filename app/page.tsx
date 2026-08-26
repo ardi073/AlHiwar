@@ -100,64 +100,66 @@ export default function AppContainer() {
 
       </main>
 
-      {/* Login Modal Overlay */}
+            {/* Login Modal Overlay */}
       {showLoginModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center p-4">
-          <div className="bg-white rounded-[24px] p-8 w-full max-w-[380px] text-center shadow-2xl border border-slate-100">
-            <div className="w-20 h-20 bg-emerald-600 rounded-[24px] flex items-center justify-center text-white mx-auto -mt-16 mb-6 shadow-lg shadow-emerald-600/30">
-              <Lock size={40} />
-            </div>
-            
-            <h2 className="text-2xl font-extrabold text-slate-800 mb-2">Masuk ke Al-Hiwar</h2>
-            <p className="text-slate-500 text-sm mb-6">Gunakan email yang sudah Anda daftarkan di website.</p>
-            
-            <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); alert('Login berhasil (Simulasi)!'); setShowLoginModal(false); }}>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                <input 
-                  type="email" 
-                  required 
-                  placeholder="Email Anda" 
-                  className="w-full py-3.5 pl-12 pr-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium text-slate-700"
-                />
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[9999] overflow-y-auto">
+          <div className="min-h-full flex items-center justify-center p-4">
+            <div className="bg-white rounded-[24px] p-8 w-full max-w-[380px] text-center shadow-2xl border border-slate-100">
+              <div className="w-20 h-20 bg-emerald-600 rounded-[24px] flex items-center justify-center text-white mx-auto mb-6 shadow-lg shadow-emerald-600/30">
+                <Lock size={40} />
               </div>
               
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                <input 
-                  type="password" 
-                  required 
-                  placeholder="Kata Sandi" 
-                  className="w-full py-3.5 pl-12 pr-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium text-slate-700"
-                />
-              </div>
+              <h2 className="text-2xl font-extrabold text-slate-800 mb-2">Masuk ke Al-Hiwar</h2>
+              <p className="text-slate-500 text-sm mb-6">Gunakan email yang sudah Anda daftarkan di website.</p>
               
-              <button 
-                type="submit" 
-                className="w-full py-4 mt-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-emerald-600/20"
-              >
-                Masuk Sekarang
-              </button>
+              <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); alert('Login berhasil (Simulasi)!'); setShowLoginModal(false); }}>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                  <input 
+                    type="email" 
+                    required 
+                    placeholder="Email Anda" 
+                    className="w-full py-3.5 pl-12 pr-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium text-slate-700"
+                  />
+                </div>
+                
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                  <input 
+                    type="password" 
+                    required 
+                    placeholder="Kata Sandi" 
+                    className="w-full py-3.5 pl-12 pr-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium text-slate-700"
+                  />
+                </div>
+                
+                <button 
+                  type="submit" 
+                  className="w-full py-4 mt-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-emerald-600/20"
+                >
+                  Masuk Sekarang
+                </button>
+                
+                <button 
+                  type="button" 
+                  onClick={() => setShowLoginModal(false)}
+                  className="w-full py-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl font-bold text-base transition-colors"
+                >
+                  Gunakan Versi Gratis
+                </button>
+              </form>
               
-              <button 
-                type="button" 
-                onClick={() => setShowLoginModal(false)}
-                className="w-full py-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl font-bold text-base transition-colors"
-              >
-                Gunakan Versi Gratis
-              </button>
-            </form>
-            
-            <div className="mt-8 pt-6 border-t border-slate-100">
-              <p className="text-sm font-bold text-slate-800 mb-3">Belum punya akun Premium?</p>
-              <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100/50 text-left">
-                <Info size={20} className="text-emerald-600 mb-2" />
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Sesuai dengan kebijakan privasi, saat ini pendaftaran akun Premium baru tidak dapat dilakukan melalui aplikasi ini.
-                </p>
-                <p className="text-sm font-bold text-slate-800 mt-2 text-center">
-                  Silakan masuk menggunakan akun yang sudah Anda miliki.
-                </p>
+              <div className="mt-8 pt-6 border-t border-slate-100">
+                <p className="text-sm font-bold text-slate-800 mb-3">Belum punya akun Premium?</p>
+                <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100/50 text-left">
+                  <Info size={20} className="text-emerald-600 mb-2" />
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Sesuai dengan kebijakan privasi, saat ini pendaftaran akun Premium baru tidak dapat dilakukan melalui aplikasi ini.
+                  </p>
+                  <p className="text-sm font-bold text-slate-800 mt-2 text-center">
+                    Silakan masuk menggunakan akun yang sudah Anda miliki.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
