@@ -171,7 +171,7 @@ export default function ChatTab() {
 
           <div className="flex flex-row md:flex-col items-center gap-3 md:gap-6 w-full justify-between md:justify-start">
             <div className="flex items-center gap-3 md:flex-col md:w-full">
-              <div className="relative w-12 h-12 md:w-full md:aspect-square bg-blue-50 rounded-full md:rounded-2xl overflow-hidden shrink-0 flex items-center justify-center shadow-inner">
+              <div className="relative w-12 h-12 md:w-[200px] md:h-[200px] bg-blue-50 rounded-full md:rounded-2xl overflow-hidden shrink-0 flex items-center justify-center shadow-inner">
                 <img src="/ustadz_avatar.png" alt="Tutor" className={`w-full h-full object-cover transition-transform duration-700 ${isAiSpeaking ? 'scale-105' : 'scale-100'}`} onError={(e) => (e.currentTarget.src = 'https://ui-avatars.com/api/?name=Ustadz&background=0D8ABC&color=fff&size=256')} />
               </div>
               <div className="text-left md:text-center flex-1">
