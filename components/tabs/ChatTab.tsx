@@ -126,14 +126,15 @@ export default function ChatTab() {
 
   return (
     <div className="flex h-screen w-full bg-slate-50 text-slate-900 overflow-hidden relative font-sans flex-col">
-      <div className="flex-1 flex w-full max-w-6xl mx-auto h-full overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row w-full max-w-6xl mx-auto h-full overflow-hidden">
         
-        {/* Left column: Avatar and Info */}
-        <div className="w-full shrink-0 h-auto md:h-full md:w-[350px] p-6 flex flex-col items-center bg-white border-b md:border-b-0 md:border-r border-slate-200 shadow-sm relative z-10">
-          <div className="w-full relative mb-8">
+        {/* Top Bar / Sidebar */}
+        <div className="w-full md:w-[280px] shrink-0 p-3 md:p-6 flex flex-col items-center bg-white border-b md:border-b-0 md:border-r border-slate-200 shadow-sm relative z-10">
+          
+          <div className="w-full relative mb-3 md:mb-6">
             <button 
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center justify-between w-full bg-white border-2 border-slate-200 shadow-sm rounded-xl px-4 py-3 text-sm font-bold text-slate-700 hover:border-blue-400 transition-colors"
+              className="flex items-center justify-between w-full bg-slate-50 border border-slate-200 shadow-sm rounded-xl px-3 py-2 md:px-4 md:py-3 text-sm font-bold text-slate-700 hover:border-blue-400 transition-colors"
             >
               <span className="truncate">{selectedScenario}</span>
               <ChevronDown size={18} className={`transition-transform text-slate-400 ${isDropdownOpen ? 'rotate-180' : ''}`} />
@@ -155,7 +156,7 @@ export default function ChatTab() {
                             setSelectedScenario(item); 
                             setIsDropdownOpen(false); 
                           }}
-                          className={`w-full flex items-center justify-between px-4 py-2.5 text-sm hover:bg-slate-700 transition-colors ${selectedScenario === item ? 'bg-slate-700/50 text-blue-400 font-semibold' : 'text-slate-200'}`}
+                          className={`w-full flex items-center justify-between px-4 py-2 text-sm hover:bg-slate-700 transition-colors ${selectedScenario === item ? 'bg-slate-700/50 text-blue-400 font-semibold' : 'text-slate-200'}`}
                         >
                           {item}
                           {isPremium && <Lock size={14} className="text-slate-400" />}
@@ -168,23 +169,25 @@ export default function ChatTab() {
             )}
           </div>
 
-          <div className="relative w-full aspect-square bg-blue-50 rounded-2xl overflow-hidden mb-6 flex items-center justify-center">
-            <img src="/ustadz_avatar.png" alt="Tutor" className={`w-full h-full object-cover transition-transform duration-700 ${isAiSpeaking ? 'scale-105' : 'scale-100'}`} onError={(e) => (e.currentTarget.src = 'https://ui-avatars.com/api/?name=Ustadz&background=0D8ABC&color=fff&size=256')} />
-          </div>
-
-          <div className="text-center w-full">
-            <h2 className="text-xl font-bold text-slate-800">Ustadz Al-Hiwar</h2>
-            <p className="text-sm font-medium text-slate-500 mb-4">
-              {isAiSpeaking ? 'Sedang berbicara...' : isThinking ? 'Sedang mengetik...' : isListening ? 'Mendengarkan...' : 'Aktif (Idle)'}
-            </p>
+          <div className="flex flex-row md:flex-col items-center gap-3 md:gap-6 w-full justify-between md:justify-start">
+            <div className="flex items-center gap-3 md:flex-col md:w-full">
+              <div className="relative w-12 h-12 md:w-full md:aspect-square bg-blue-50 rounded-full md:rounded-2xl overflow-hidden shrink-0 flex items-center justify-center shadow-inner">
+                <img src="/ustadz_avatar.png" alt="Tutor" className={`w-full h-full object-cover transition-transform duration-700 ${isAiSpeaking ? 'scale-105' : 'scale-100'}`} onError={(e) => (e.currentTarget.src = 'https://ui-avatars.com/api/?name=Ustadz&background=0D8ABC&color=fff&size=256')} />
+              </div>
+              <div className="text-left md:text-center flex-1">
+                <h2 className="text-sm md:text-xl font-extrabold text-slate-800 leading-tight">Ustadz Al-Hiwar</h2>
+                <p className="text-[10px] md:text-sm font-bold text-blue-500 mt-0.5">
+                  {isAiSpeaking ? 'Berbicara...' : isThinking ? 'Mengetik...' : isListening ? 'Mendengar...' : 'Aktif (Idle)'}
+                </p>
+              </div>
+            </div>
             
             <button 
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-colors text-sm"
-              onClick={() => {
-                if(confirm("Hapus riwayat obrolan?")) setChatHistory([]);
-              }}
+              className="md:w-full p-2.5 md:px-4 md:py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-colors text-sm shrink-0 flex items-center justify-center gap-2"
+              onClick={() => { if(confirm("Hapus riwayat obrolan?")) setChatHistory([]); }}
+              title="Hapus Obrolan"
             >
-              <Trash2 size={16} /> Hapus Obrolan
+              <Trash2 size={18} /> <span className="hidden md:inline">Hapus Obrolan</span>
             </button>
           </div>
         </div>
