@@ -13,7 +13,7 @@ const mockDictionary: Record<string, { arabic: string; transliteration: string; 
   'laptop': { arabic: 'حاسوب محمول', transliteration: 'hasub mahmul', type: 'Noun' }, // I added laptop just in case, but let's remove it so it triggers premium as requested by user.
 };
 
-export default function KamusTab() {
+export default function KamusTab({ isPremium = false }: { isPremium?: boolean }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
   
@@ -97,7 +97,7 @@ export default function KamusTab() {
                 </p>
                 
                 <button 
-                  onClick={() => alert('Upgrade ke Premium untuk menggunakan AI Translate!')}
+                  onClick={() => isPremium ? alert('AI Translate sedang memproses... (Simulasi)') : alert('Upgrade ke Premium untuk menggunakan AI Translate!')}
                   className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-blue-500/30 transition-all hover:scale-105"
                 >
                   <Sparkles size={18} />

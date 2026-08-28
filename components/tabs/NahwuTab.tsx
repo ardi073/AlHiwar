@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Book, Lock, CheckCircle2, Info, Table, CheckSquare } from 'lucide-react';
 
-export default function NahwuTab() {
+export default function NahwuTab({ isPremium = false }: { isPremium?: boolean }) {
   const [chapters, setChapters] = useState<any[]>([]);
   const [activeChapterId, setActiveChapterId] = useState<string>('');
   const [completedChapters, setCompletedChapters] = useState<string[]>([]);

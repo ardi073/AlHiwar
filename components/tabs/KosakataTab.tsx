@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Volume2, Star, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 
-export default function KosakataTab() {
+export default function KosakataTab({ isPremium = false }: { isPremium?: boolean }) {
   const [themes, setThemes] = useState<any[]>([]);
   const [activeThemeId, setActiveThemeId] = useState<string>('');
   const [currentIndex, setCurrentIndex] = useState(0);

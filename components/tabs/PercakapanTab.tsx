@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { BookOpen, Lock, CheckCircle2, Volume2, Play } from 'lucide-react';
 
-export default function PercakapanTab() {
+export default function PercakapanTab({ isPremium = false }: { isPremium?: boolean }) {
   const [themes, setThemes] = useState<any[]>([]);
   const [activeThemeId, setActiveThemeId] = useState<string>('');
   const [completedThemes, setCompletedThemes] = useState<string[]>([]);

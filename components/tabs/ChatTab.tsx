@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, Trash2, Mic, Volume2, Lock } from 'lucide-react';
 
-export default function ChatTab() {
+export default function ChatTab({ isPremium = false }: { isPremium?: boolean }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedScenario, setSelectedScenario] = useState('Perkenalan');
   
@@ -25,7 +25,7 @@ export default function ChatTab() {
     { type: 'Premium (SaaS)', items: ['Di Pasar', 'Keluarga', 'Di Bandara', 'Hobi', 'Rumah Sakit', 'Pekerjaan', 'Cuaca & Musim'] }
   ];
 
-  const checkPremiumAccess = (item: string) => scenarios[0].items.includes(item);
+  const checkPremiumAccess = (item: string) => isPremium || scenarios[0].items.includes(item);
 
   // Auto scroll to bottom
   useEffect(() => {

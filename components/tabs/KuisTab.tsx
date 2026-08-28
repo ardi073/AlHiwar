@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Trophy, ArrowRight, RotateCcw, AlertCircle, CheckCircle2 } from 'lucide-react';
 
-export default function KuisTab() {
+export default function KuisTab({ isPremium = false }: { isPremium?: boolean }) {
   const [themes, setThemes] = useState<any[]>([]);
   const [activeThemeId, setActiveThemeId] = useState<string>('');
   
