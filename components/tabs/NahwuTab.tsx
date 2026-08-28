@@ -40,7 +40,7 @@ export default function NahwuTab({ isPremium = false }: { isPremium?: boolean })
     return (
       <div className="flex-1 flex flex-col w-full h-full relative overflow-hidden"><div className="flex-1 flex flex-col items-center justify-center gap-4">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-500 font-medium">Memuat modul Nahwu Shorof...</p>
+          <p className="text-slate-500 dark:text-slate-400 font-medium">Memuat modul Nahwu Shorof...</p>
         </div>
       </div>
     );
@@ -51,9 +51,9 @@ export default function NahwuTab({ isPremium = false }: { isPremium?: boolean })
   return (
     <div className="flex-1 flex flex-col w-full h-full relative overflow-hidden"><main className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left Sidebar */}
-        <div className="w-full shrink-0 h-[40%] md:h-full md:w-80 bg-white border-r border-slate-200 flex flex-col h-full overflow-hidden shadow-sm z-10">
-          <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-            <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+        <div className="w-full shrink-0 h-[40%] md:h-full md:w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 flex flex-col h-full overflow-hidden shadow-sm z-10">
+          <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+            <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg flex items-center gap-2">
               <Book size={20} className="text-blue-600" />
               Modul Nahwu Shorof
             </h3>
@@ -68,13 +68,13 @@ export default function NahwuTab({ isPremium = false }: { isPremium?: boolean })
                 <button
                   key={chap.id}
                   onClick={() => hasAccess ? setActiveChapterId(chap.id) : alert('Fitur Premium!')}
-                  className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all ${isActive ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : !hasAccess ? 'bg-slate-50 opacity-60 hover:opacity-100' : 'bg-white hover:bg-slate-50 border border-slate-100'}`}
+                  className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all ${isActive ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : !hasAccess ? 'bg-slate-50 dark:bg-slate-950 opacity-60 hover:opacity-100' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800'}`}
                 >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${isActive ? 'bg-white/20' : 'bg-blue-50 text-blue-600'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${isActive ? 'bg-white dark:bg-slate-900/20' : 'bg-blue-50 dark:bg-blue-950 text-blue-600'}`}>
                     {idx + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className={`font-bold truncate text-sm ${isActive ? 'text-white' : 'text-slate-800'}`}>
+                    <div className={`font-bold truncate text-sm ${isActive ? 'text-white' : 'text-slate-800 dark:text-slate-200'}`}>
                       {chap.title}
                     </div>
                   </div>
@@ -87,17 +87,17 @@ export default function NahwuTab({ isPremium = false }: { isPremium?: boolean })
         </div>
 
         {/* Right Main Panel */}
-        <div className="flex-1 flex flex-col h-full bg-slate-50 relative overflow-hidden">
+        <div className="flex-1 flex flex-col h-full bg-slate-50 dark:bg-slate-950 relative overflow-hidden">
           {activeChapter && (
             <>
               {/* Header */}
-              <div className="p-6 bg-white border-b border-slate-200 flex items-center justify-between shadow-sm z-10">
+              <div className="p-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-sm z-10">
                 <div>
-                  <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                  <h2 className="text-2xl font-black text-slate-800 dark:text-slate-200 flex items-center gap-3">
                     {activeChapter.title}
                     {activeChapter.titleAr && <span className="text-orange-400 font-serif font-normal">{activeChapter.titleAr}</span>}
                   </h2>
-                  <p className="text-slate-500 text-sm mt-1">Pelajari kaidah tata bahasa Arab</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Pelajari kaidah tata bahasa Arab</p>
                 </div>
                 <button
                   onClick={toggleComplete}
@@ -113,33 +113,33 @@ export default function NahwuTab({ isPremium = false }: { isPremium?: boolean })
                 
                 {/* Explanation */}
                 {activeChapter.explanation && (
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                  <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
                     <h3 className="font-bold text-blue-600 mb-4 flex items-center gap-2">
                       <Info size={18} /> Penjelasan
                     </h3>
-                    <div className="text-slate-700 leading-relaxed font-medium" dangerouslySetInnerHTML={{ __html: activeChapter.explanation.replace(/\n/g, '<br>') }} />
+                    <div className="text-slate-700 dark:text-slate-300 leading-relaxed font-medium" dangerouslySetInnerHTML={{ __html: activeChapter.explanation.replace(/\n/g, '<br>') }} />
                   </div>
                 )}
 
                 {/* Table */}
                 {activeChapter.table && activeChapter.table.headers && activeChapter.table.rows && (
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+                  <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-x-auto">
                     <h3 className="font-bold text-orange-500 mb-4 flex items-center gap-2">
                       <Table size={18} /> Tabel Tashrif / I'rab
                     </h3>
                     <table className="w-full text-right" dir="rtl">
                       <thead>
-                        <tr className="bg-slate-50 border-b-2 border-slate-200">
+                        <tr className="bg-slate-50 dark:bg-slate-950 border-b-2 border-slate-200 dark:border-slate-700">
                           {activeChapter.table.headers.map((h: string, i: number) => (
-                            <th key={i} className="p-3 font-bold text-slate-700">{h}</th>
+                            <th key={i} className="p-3 font-bold text-slate-700 dark:text-slate-300">{h}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
                         {activeChapter.table.rows.map((row: string[], i: number) => (
-                          <tr key={i} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                          <tr key={i} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:bg-slate-950 transition-colors">
                             {row.map((cell: string, j: number) => (
-                              <td key={j} className="p-3 font-serif text-lg text-slate-800">{cell}</td>
+                              <td key={j} className="p-3 font-serif text-lg text-slate-800 dark:text-slate-200">{cell}</td>
                             ))}
                           </tr>
                         ))}
@@ -150,18 +150,18 @@ export default function NahwuTab({ isPremium = false }: { isPremium?: boolean })
 
                 {/* Examples */}
                 {activeChapter.examples && activeChapter.examples.length > 0 && (
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                  <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
                     <h3 className="font-bold text-emerald-600 mb-4 flex items-center gap-2">
                       <CheckSquare size={18} /> Contoh Kalimat
                     </h3>
                     <div className="space-y-4">
                       {activeChapter.examples.map((ex: any, i: number) => (
-                        <div key={i} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                          <p className="font-serif text-2xl mb-2 text-slate-800 text-right" dir="rtl">{ex.ar}</p>
-                          <p className="text-sm font-medium text-slate-500 mb-1">{ex.latin}</p>
-                          <p className="text-sm text-slate-700 mb-2">{ex.id}</p>
+                        <div key={i} className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                          <p className="font-serif text-2xl mb-2 text-slate-800 dark:text-slate-200 text-right" dir="rtl">{ex.ar}</p>
+                          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{ex.latin}</p>
+                          <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">{ex.id}</p>
                           {ex.highlight && (
-                            <p className="text-xs font-bold text-blue-600 italic mt-2 pt-2 border-t border-slate-200 flex items-center gap-1">
+                            <p className="text-xs font-bold text-blue-600 italic mt-2 pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center gap-1">
                               <Info size={12} /> {ex.highlight}
                             </p>
                           )}

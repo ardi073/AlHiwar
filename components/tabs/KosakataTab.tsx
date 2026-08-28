@@ -77,12 +77,12 @@ export default function KosakataTab({ isPremium = false }: { isPremium?: boolean
         
         {/* Theme Selector Dropdown */}
         <div className="w-full max-w-md mb-8">
-          <label className="block text-sm font-bold text-slate-500 mb-2">Pilih Tema Belajar:</label>
+          <label className="block text-sm font-bold text-slate-500 dark:text-slate-400 mb-2">Pilih Tema Belajar:</label>
           <div className="relative">
             <select 
               value={activeThemeId}
               onChange={(e) => handleThemeChange(e.target.value)}
-              className="w-full appearance-none bg-white border-2 border-slate-200 text-slate-800 font-bold py-3 px-4 pr-8 rounded-xl focus:outline-none focus:border-blue-500 shadow-sm"
+              className="w-full appearance-none bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-bold py-3 px-4 pr-8 rounded-xl focus:outline-none focus:border-blue-50 dark:border-blue-9000 shadow-sm"
             >
               {themes.map(t => (
                 <option key={t.id} value={t.id}>
@@ -90,7 +90,7 @@ export default function KosakataTab({ isPremium = false }: { isPremium?: boolean
                 </option>
               ))}
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 dark:text-slate-400">
               <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
             </div>
           </div>
@@ -105,23 +105,23 @@ export default function KosakataTab({ isPremium = false }: { isPremium?: boolean
             <div className={`w-full h-full relative transition-transform duration-500 transform-style-3d shadow-xl rounded-3xl ${isFlipped ? 'rotate-y-180' : ''}`}>
               
               {/* Front Face (Arabic) */}
-              <div className="absolute w-full h-full bg-white border border-slate-200 rounded-3xl backface-hidden flex flex-col items-center justify-center p-8 z-20">
+              <div className="absolute w-full h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl backface-hidden flex flex-col items-center justify-center p-8 z-20">
                 <span className="absolute top-6 text-sm font-bold text-blue-400 tracking-wide uppercase">Bahasa Arab</span>
                 
-                <h2 className="text-5xl md:text-6xl font-serif text-slate-800 mb-8 leading-tight text-center" dir="rtl">
+                <h2 className="text-5xl md:text-6xl font-serif text-slate-800 dark:text-slate-200 mb-8 leading-tight text-center" dir="rtl">
                   {currentVocab.ar}
                 </h2>
                 
                 <div className="absolute bottom-6 flex gap-4">
                   <button 
                     onClick={(e) => playAudio(e, currentVocab.ar)}
-                    className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors shadow-sm"
+                    className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition-colors shadow-sm"
                   >
                     <Volume2 size={24} className={isPlaying ? 'animate-pulse' : ''} />
                   </button>
                   <button 
                     onClick={(e) => toggleFavorite(e, currentVocab.ar)}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors shadow-sm ${favorites.includes(currentVocab.ar) ? 'bg-orange-100 text-orange-500' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors shadow-sm ${favorites.includes(currentVocab.ar) ? 'bg-orange-100 text-orange-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-slate-200'}`}
                   >
                     <Star size={24} className={favorites.includes(currentVocab.ar) ? 'fill-current' : ''} />
                   </button>
@@ -147,7 +147,7 @@ export default function KosakataTab({ isPremium = false }: { isPremium?: boolean
             <button 
               onClick={() => { setCurrentIndex(Math.max(0, currentIndex - 1)); setIsFlipped(false); }}
               disabled={currentIndex === 0}
-              className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${currentIndex === 0 ? 'bg-slate-100 text-slate-300' : 'bg-white text-blue-600 shadow-md hover:-translate-x-1'}`}
+              className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${currentIndex === 0 ? 'bg-slate-100 dark:bg-slate-800 text-slate-300' : 'bg-white dark:bg-slate-900 text-blue-600 shadow-md hover:-translate-x-1'}`}
             >
               <ChevronLeft size={28} />
             </button>
@@ -159,7 +159,7 @@ export default function KosakataTab({ isPremium = false }: { isPremium?: boolean
             <button 
               onClick={() => { setCurrentIndex(Math.max(0, currentIndex + 1)); setIsFlipped(false); }}
               disabled={currentIndex === vocabList.length - 1}
-              className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${currentIndex === vocabList.length - 1 ? 'bg-slate-100 text-slate-300' : 'bg-white text-blue-600 shadow-md hover:translate-x-1'}`}
+              className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${currentIndex === vocabList.length - 1 ? 'bg-slate-100 dark:bg-slate-800 text-slate-300' : 'bg-white dark:bg-slate-900 text-blue-600 shadow-md hover:translate-x-1'}`}
             >
               <ChevronRight size={28} />
             </button>

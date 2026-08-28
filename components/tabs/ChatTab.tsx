@@ -125,16 +125,16 @@ export default function ChatTab({ isPremium = false }: { isPremium?: boolean }) 
   };
 
   return (
-    <div className="flex h-screen w-full bg-slate-50 text-slate-900 overflow-hidden relative font-sans flex-col">
+    <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden relative font-sans flex-col">
       <div className="flex-1 flex flex-col md:flex-row w-full max-w-6xl mx-auto h-full overflow-hidden">
         
         {/* Top Bar / Sidebar */}
-        <div className="w-full md:w-[280px] shrink-0 p-3 md:p-6 flex flex-col items-center bg-white border-b md:border-b-0 md:border-r border-slate-200 shadow-sm relative z-10">
+        <div className="w-full md:w-[280px] shrink-0 p-3 md:p-6 flex flex-col items-center bg-white dark:bg-slate-900 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-700 shadow-sm relative z-10">
           
           <div className="w-full relative mb-3 md:mb-6">
             <button 
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center justify-between w-full bg-slate-50 border border-slate-200 shadow-sm rounded-xl px-3 py-2 md:px-4 md:py-3 text-sm font-bold text-slate-700 hover:border-blue-400 transition-colors"
+              className="flex items-center justify-between w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 shadow-sm rounded-xl px-3 py-2 md:px-4 md:py-3 text-sm font-bold text-slate-700 dark:text-slate-300 hover:border-blue-400 transition-colors"
             >
               <span className="truncate">{selectedScenario}</span>
               <ChevronDown size={18} className={`transition-transform text-slate-400 ${isDropdownOpen ? 'rotate-180' : ''}`} />
@@ -171,11 +171,11 @@ export default function ChatTab({ isPremium = false }: { isPremium?: boolean }) 
 
           <div className="flex flex-row md:flex-col items-center gap-3 md:gap-6 w-full justify-between md:justify-start">
             <div className="flex items-center gap-3 md:flex-col md:w-full">
-              <div className="relative w-12 h-12 md:w-[200px] md:h-[200px] bg-blue-50 rounded-full md:rounded-2xl overflow-hidden shrink-0 flex items-center justify-center shadow-inner">
+              <div className="relative w-12 h-12 md:w-[200px] md:h-[200px] bg-blue-50 dark:bg-blue-950 rounded-full md:rounded-2xl overflow-hidden shrink-0 flex items-center justify-center shadow-inner">
                 <img src="/ustadz_avatar.png" alt="Tutor" className={`w-full h-full object-cover transition-transform duration-700 ${isAiSpeaking ? 'scale-105' : 'scale-100'}`} onError={(e) => (e.currentTarget.src = 'https://ui-avatars.com/api/?name=Ustadz&background=0D8ABC&color=fff&size=256')} />
               </div>
               <div className="text-left md:text-center flex-1">
-                <h2 className="text-sm md:text-xl font-extrabold text-slate-800 leading-tight">Ustadz Al-Hiwar</h2>
+                <h2 className="text-sm md:text-xl font-extrabold text-slate-800 dark:text-slate-200 leading-tight">Ustadz Al-Hiwar</h2>
                 <p className="text-[10px] md:text-sm font-bold text-blue-500 mt-0.5">
                   {isAiSpeaking ? 'Berbicara...' : isThinking ? 'Mengetik...' : isListening ? 'Mendengar...' : 'Aktif (Idle)'}
                 </p>
@@ -193,7 +193,7 @@ export default function ChatTab({ isPremium = false }: { isPremium?: boolean }) 
         </div>
 
         {/* Right column: Chat Area */}
-        <div className="flex-1 flex flex-col bg-slate-50/50 relative h-full">
+        <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950/50 relative h-full">
           
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {chatHistory.map((msg, idx) => {
@@ -204,27 +204,27 @@ export default function ChatTab({ isPremium = false }: { isPremium?: boolean }) 
                     <div className={`text-xs font-bold text-slate-400 mb-1 ${!isAi && 'text-right'}`}>
                       {isAi ? 'Ustadz Al-Hiwar' : 'Anda'}
                     </div>
-                    <div className={`relative group rounded-3xl p-6 shadow-sm border ${isAi ? 'bg-white border-slate-200 rounded-tl-none' : 'bg-blue-50 border-blue-100 rounded-tr-none'}`}>
-                      <p className={`font-serif text-3xl leading-relaxed text-right text-slate-800 ${isAi ? 'mb-4' : ''}`} dir="rtl">
+                    <div className={`relative group rounded-3xl p-6 shadow-sm border ${isAi ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-tl-none' : 'bg-blue-50 dark:bg-blue-950 border-blue-100 rounded-tr-none'}`}>
+                      <p className={`font-serif text-3xl leading-relaxed text-right text-slate-800 dark:text-slate-200 ${isAi ? 'mb-4' : ''}`} dir="rtl">
                         {msg.ar}
                       </p>
                       
                       {isAi && (
                         <>
-                          <p className="font-medium mb-1 text-slate-600">{msg.latin}</p>
-                          <p className="text-sm text-slate-500">{msg.id}</p>
+                          <p className="font-medium mb-1 text-slate-600 dark:text-slate-400">{msg.latin}</p>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">{msg.id}</p>
                           <div className="absolute -bottom-4 right-6 flex gap-2">
                             <button
                               title="Dengar (Arab)"
                               onClick={() => playTTS(msg.ar, 'ar-SA')}
-                              className="w-10 h-10 bg-white border border-slate-200 shadow-md rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-50 hover:scale-105 transition-transform"
+                              className="w-10 h-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-md rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-50 dark:bg-blue-950 hover:scale-105 transition-transform"
                             >
                               <Volume2 size={18} />
                             </button>
                             <button
                               title="Dengar (Indo)"
                               onClick={() => playTTS(msg.id || '', 'id-ID')}
-                              className="w-10 h-10 bg-slate-100 border border-slate-200 shadow-md rounded-full flex items-center justify-center text-emerald-600 hover:bg-emerald-50 hover:scale-105 transition-transform font-bold text-[10px]"
+                              className="w-10 h-10 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md rounded-full flex items-center justify-center text-emerald-600 hover:bg-emerald-50 hover:scale-105 transition-transform font-bold text-[10px]"
                             >
                               ID
                             </button>
@@ -240,7 +240,7 @@ export default function ChatTab({ isPremium = false }: { isPremium?: boolean }) 
             {isThinking && (
               <div className="flex w-full justify-start">
                 <div className="max-w-[85%] items-start">
-                  <div className="bg-white border border-slate-200 rounded-3xl rounded-tl-none p-6 shadow-sm flex items-center gap-2">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-3xl rounded-tl-none p-6 shadow-sm flex items-center gap-2">
                     <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
                     <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                     <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
@@ -252,14 +252,14 @@ export default function ChatTab({ isPremium = false }: { isPremium?: boolean }) 
             <div ref={chatEndRef} />
           </div>
 
-          <div className="p-6 bg-white border-t border-slate-200 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.05)]">
+          <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.05)]">
             <div className="flex gap-4 w-full">
               <button 
                 onClick={() => startListening('id-ID')}
                 className={`flex-1 flex flex-col items-center justify-center gap-2 py-4 rounded-2xl text-base font-black transition-all ${
                   isListening === 'id-ID' 
                   ? 'bg-red-50 text-red-500 hover:bg-red-100 border border-red-100' 
-                  : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 shadow-sm'
+                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 shadow-sm'
                 }`}
               >
                 <Mic size={24} className={isListening === 'id-ID' ? 'animate-pulse text-red-500' : 'text-red-500'} />
@@ -271,7 +271,7 @@ export default function ChatTab({ isPremium = false }: { isPremium?: boolean }) 
                 className={`flex-1 flex flex-col items-center justify-center gap-2 py-4 rounded-2xl text-base font-black transition-all ${
                   isListening === 'ar-SA' 
                   ? 'bg-red-50 text-red-500 hover:bg-red-100 border border-red-100' 
-                  : 'bg-white text-emerald-700 hover:bg-emerald-50 border border-emerald-500 shadow-sm'
+                  : 'bg-white dark:bg-slate-900 text-emerald-700 hover:bg-emerald-50 border border-emerald-500 shadow-sm'
                 }`}
               >
                 <Mic size={24} className={isListening === 'ar-SA' ? 'animate-pulse text-red-500' : 'text-emerald-600'} />

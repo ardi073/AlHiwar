@@ -60,9 +60,9 @@ export default function PercakapanTab({ isPremium = false }: { isPremium?: boole
 
   return (
     <div className="flex-1 flex flex-col w-full h-full relative overflow-hidden"><main className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        <div className="w-full shrink-0 h-[40%] md:h-full md:w-80 bg-white border-r border-slate-200 flex flex-col h-full overflow-hidden shadow-sm z-10">
-          <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-            <h3 className="font-bold text-slate-800 text-lg">Daftar Tema</h3>
+        <div className="w-full shrink-0 h-[40%] md:h-full md:w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 flex flex-col h-full overflow-hidden shadow-sm z-10">
+          <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+            <h3 className="font-bold text-slate-800 dark:text-slate-200 text-lg">Daftar Tema</h3>
           </div>
           <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
             {themes.map((theme) => {
@@ -74,16 +74,16 @@ export default function PercakapanTab({ isPremium = false }: { isPremium?: boole
                 <button
                   key={theme.id}
                   onClick={() => hasAccess ? setActiveThemeId(theme.id) : alert('Fitur Premium!')}
-                  className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all ${isActive ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : !hasAccess ? 'bg-slate-50 opacity-60 hover:opacity-100' : 'bg-white hover:bg-slate-50 border border-slate-100'}`}
+                  className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all ${isActive ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : !hasAccess ? 'bg-slate-50 dark:bg-slate-950 opacity-60 hover:opacity-100' : 'bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800'}`}
                 >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isActive ? 'bg-white/20' : 'bg-blue-50 text-blue-600'}`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isActive ? 'bg-white dark:bg-slate-900/20' : 'bg-blue-50 dark:bg-blue-950 text-blue-600'}`}>
                     <BookOpen size={20} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className={`font-bold truncate ${isActive ? 'text-white' : 'text-slate-800'}`}>
+                    <div className={`font-bold truncate ${isActive ? 'text-white' : 'text-slate-800 dark:text-slate-200'}`}>
                       {theme.name}
                     </div>
-                    <div className={`text-xs truncate font-serif ${isActive ? 'text-blue-100' : 'text-slate-500'}`}>
+                    <div className={`text-xs truncate font-serif ${isActive ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
                       {theme.arabic}
                     </div>
                   </div>
@@ -95,16 +95,16 @@ export default function PercakapanTab({ isPremium = false }: { isPremium?: boole
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col h-full bg-slate-50/50 relative overflow-hidden">
+        <div className="flex-1 flex flex-col h-full bg-slate-50 dark:bg-slate-950/50 relative overflow-hidden">
           {activeTheme && (
             <>
-              <div className="p-6 bg-white border-b border-slate-200 flex items-center justify-between shadow-sm z-10">
+              <div className="p-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-sm z-10">
                 <div>
-                  <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                  <h2 className="text-2xl font-black text-slate-800 dark:text-slate-200 flex items-center gap-3">
                     {activeTheme.name}
                     <span className="text-orange-400 font-serif font-normal">{activeTheme.arabic}</span>
                   </h2>
-                  <p className="text-slate-500 text-sm mt-1">Pelajari dialog sehari-hari di bawah ini</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Pelajari dialog sehari-hari di bawah ini</p>
                 </div>
                 <button
                   onClick={toggleComplete}
@@ -124,15 +124,15 @@ export default function PercakapanTab({ isPremium = false }: { isPremium?: boole
                         <div className={`text-xs font-bold text-slate-400 mb-1 ${!isLeft && 'text-right'}`}>
                           {line.char}
                         </div>
-                        <div className={`relative group rounded-2xl p-5 shadow-sm border ${isLeft ? 'bg-white border-slate-200 rounded-tl-none' : 'bg-blue-50 border-blue-100 rounded-tr-none'}`}>
-                          <p className="font-serif text-2xl text-right leading-relaxed mb-3 text-slate-800" dir="rtl">
+                        <div className={`relative group rounded-2xl p-5 shadow-sm border ${isLeft ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-tl-none' : 'bg-blue-50 dark:bg-blue-950 border-blue-100 rounded-tr-none'}`}>
+                          <p className="font-serif text-2xl text-right leading-relaxed mb-3 text-slate-800 dark:text-slate-200" dir="rtl">
                             {line.ar}
                           </p>
-                          <p className="text-slate-600 font-medium mb-1">{line.latin}</p>
-                          <p className="text-slate-500 text-sm">{line.id}</p>
+                          <p className="text-slate-600 dark:text-slate-400 font-medium mb-1">{line.latin}</p>
+                          <p className="text-slate-500 dark:text-slate-400 text-sm">{line.id}</p>
                           <button
                             onClick={() => playAudio(idx, line.ar)}
-                            className={`absolute -bottom-3 ${isLeft ? '-right-3' : '-left-3'} w-10 h-10 bg-white border border-slate-200 shadow-md rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-50 hover:scale-105 transition-all opacity-0 group-hover:opacity-100`}
+                            className={`absolute -bottom-3 ${isLeft ? '-right-3' : '-left-3'} w-10 h-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-md rounded-full flex items-center justify-center text-blue-600 hover:bg-blue-50 dark:bg-blue-950 hover:scale-105 transition-all opacity-0 group-hover:opacity-100`}
                           >
                             {isPlaying === idx ? <Volume2 size={18} className="animate-pulse" /> : <Play size={18} className="ml-1" />}
                           </button>
@@ -143,8 +143,8 @@ export default function PercakapanTab({ isPremium = false }: { isPremium?: boole
                 })}
               </div>
 
-              <div className="p-3 bg-white border-t border-slate-200 text-center">
-                <span className="text-xs font-semibold text-slate-500">Tip: Ketuk tombol speaker untuk mendengar pelafalan.</span>
+              <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 text-center">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Tip: Ketuk tombol speaker untuk mendengar pelafalan.</span>
               </div>
             </>
           )}

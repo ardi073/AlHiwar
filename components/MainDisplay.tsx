@@ -14,7 +14,7 @@ export default function MainDisplay({ volume = 0, status = 'Disconnected' }: Mai
   const glowOpacity = isLive ? 0.4 + (volume / 255) * 0.6 : 0;
   
   return (
-    <main className="flex-1 flex flex-col items-center justify-center relative overflow-hidden bg-slate-50">
+    <main className="flex-1 flex flex-col items-center justify-center relative overflow-hidden bg-slate-50 dark:bg-slate-950">
       {/* Background ambient lighting */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full bg-blue-100 blur-[120px] mix-blend-multiply" />
@@ -44,20 +44,20 @@ export default function MainDisplay({ volume = 0, status = 'Disconnected' }: Mai
           <div className="absolute inset-0 shadow-inner rounded-full pointer-events-none" />
         </div>
         
-        <div className={`mt-8 px-4 py-1.5 rounded-full backdrop-blur-md border border-white shadow-sm transition-colors flex items-center gap-2 ${isLive ? 'bg-blue-50 text-blue-700' : 'bg-white text-slate-500'}`}>
+        <div className={`mt-8 px-4 py-1.5 rounded-full backdrop-blur-md border border-white shadow-sm transition-colors flex items-center gap-2 ${isLive ? 'bg-blue-50 dark:bg-blue-950 text-blue-700' : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400'}`}>
            <span className="relative flex h-2 w-2">
              {isLive && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>}
-             <span className={`relative inline-flex rounded-full h-2 w-2 ${isLive ? 'bg-blue-500' : 'bg-slate-400'}`}></span>
+             <span className={`relative inline-flex rounded-full h-2 w-2 ${isLive ? 'bg-blue-50 dark:bg-blue-9500' : 'bg-slate-400'}`}></span>
            </span>
            <span className="text-xs font-bold uppercase tracking-wider">{isLive ? 'Listening...' : 'Ready to talk'}</span>
         </div>
 
         {/* AI Greeting Text */}
         <div className="text-center space-y-3 mt-6 max-w-sm px-6">
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
             مرحباً بك!
           </h2>
-          <p className="text-lg md:text-xl text-slate-600 font-medium">
+          <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 font-medium">
             Let's practice your Arabic conversation today.
           </p>
         </div>

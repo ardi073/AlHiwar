@@ -86,8 +86,8 @@ export default function KuisTab({ isPremium = false }: { isPremium?: boolean }) 
         
         {/* Theme Selector */}
         {!isFinished && currentQuestionIdx === 0 && !isAnswerChecked && (
-          <div className="w-full mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <h3 className="text-lg font-black text-slate-800 mb-4 text-center">Pilih Tema Kuis</h3>
+          <div className="w-full mb-8 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+            <h3 className="text-lg font-black text-slate-800 dark:text-slate-200 mb-4 text-center">Pilih Tema Kuis</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {themes.map(t => {
                 const hasAccess = checkPremiumAccess(t.id);
@@ -95,7 +95,7 @@ export default function KuisTab({ isPremium = false }: { isPremium?: boolean }) 
                   <button
                     key={t.id}
                     onClick={() => startQuiz(t.id)}
-                    className={`p-3 rounded-xl border-2 text-sm font-bold transition-all ${activeThemeId === t.id ? 'border-blue-600 bg-blue-50 text-blue-700' : hasAccess ? 'border-slate-200 hover:border-blue-300 text-slate-600' : 'border-slate-100 bg-slate-50 text-slate-400 opacity-60'}`}
+                    className={`p-3 rounded-xl border-2 text-sm font-bold transition-all ${activeThemeId === t.id ? 'border-blue-600 bg-blue-50 dark:bg-blue-950 text-blue-700' : hasAccess ? 'border-slate-200 dark:border-slate-700 hover:border-blue-300 text-slate-600 dark:text-slate-400' : 'border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-400 opacity-60'}`}
                   >
                     {t.name}
                   </button>
@@ -106,13 +106,13 @@ export default function KuisTab({ isPremium = false }: { isPremium?: boolean }) 
         )}
 
         {isFinished ? (
-          <div className="w-full bg-white p-10 rounded-3xl shadow-sm border border-slate-200 text-center flex flex-col items-center animate-in zoom-in-95 duration-500 mt-10">
+          <div className="w-full bg-white dark:bg-slate-900 p-10 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 text-center flex flex-col items-center animate-in zoom-in-95 duration-500 mt-10">
             <div className="w-24 h-24 bg-yellow-100 text-yellow-500 rounded-full flex items-center justify-center mb-6">
               <Trophy size={48} />
             </div>
-            <h2 className="text-3xl font-black text-slate-800 mb-2">Skor Anda</h2>
+            <h2 className="text-3xl font-black text-slate-800 dark:text-slate-200 mb-2">Skor Anda</h2>
             <div className="text-7xl font-black text-blue-600 mb-6">{score}</div>
-            <p className="text-slate-500 mb-8 font-medium">Luar biasa! Anda telah menyelesaikan kuis tema <span className="font-bold text-slate-700">{activeTheme?.name}</span>.</p>
+            <p className="text-slate-500 dark:text-slate-400 mb-8 font-medium">Luar biasa! Anda telah menyelesaikan kuis tema <span className="font-bold text-slate-700 dark:text-slate-300">{activeTheme?.name}</span>.</p>
             <button 
               onClick={() => startQuiz(activeThemeId)}
               className="flex items-center gap-2 px-8 py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-md hover:bg-blue-700 transition-colors"
@@ -125,7 +125,7 @@ export default function KuisTab({ isPremium = false }: { isPremium?: boolean }) 
             <div className="w-full flex flex-col">
               {/* Progress Bar */}
               <div className="w-full mb-8">
-                <div className="flex justify-between text-sm font-bold text-slate-500 mb-2">
+                <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400 mb-2">
                   <span>Pertanyaan {currentQuestionIdx + 1} dari {quizList.length}</span>
                   <span className="text-blue-600">Skor: {score}</span>
                 </div>
@@ -135,12 +135,12 @@ export default function KuisTab({ isPremium = false }: { isPremium?: boolean }) 
               </div>
 
               {/* Question Card */}
-              <div className="w-full bg-white p-8 rounded-3xl shadow-sm border border-slate-200 mb-6 flex flex-col items-center justify-center gap-4">
-                <h2 className="text-xl md:text-2xl font-bold text-slate-800 text-center leading-relaxed">
+              <div className="w-full bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 mb-6 flex flex-col items-center justify-center gap-4">
+                <h2 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-slate-200 text-center leading-relaxed">
                   {currentQ.question}
                 </h2>
                 {currentQ.arabic && (
-                  <p className="text-3xl font-serif text-slate-700 text-center" dir="rtl">
+                  <p className="text-3xl font-serif text-slate-700 dark:text-slate-300 text-center" dir="rtl">
                     {currentQ.arabic}
                   </p>
                 )}
@@ -149,7 +149,7 @@ export default function KuisTab({ isPremium = false }: { isPremium?: boolean }) 
               {/* Options */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                 {currentQ.options.map((opt: string, idx: number) => {
-                  let btnClass = "border-2 border-slate-200 bg-white text-slate-700 hover:border-blue-400 hover:bg-blue-50";
+                  let btnClass = "border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-blue-400 hover:bg-blue-50 dark:bg-blue-950";
                   let icon = null;
 
                   if (isAnswerChecked) {
@@ -160,10 +160,10 @@ export default function KuisTab({ isPremium = false }: { isPremium?: boolean }) 
                       btnClass = "border-2 border-red-500 bg-red-50 text-red-700";
                       icon = <AlertCircle size={20} className="text-red-500" />;
                     } else {
-                      btnClass = "border-2 border-slate-100 bg-slate-50 text-slate-400 opacity-60";
+                      btnClass = "border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-400 opacity-60";
                     }
                   } else if (selectedOption === idx) {
-                    btnClass = "border-2 border-blue-600 bg-blue-50 text-blue-700";
+                    btnClass = "border-2 border-blue-600 bg-blue-50 dark:bg-blue-950 text-blue-700";
                   }
 
                   return (

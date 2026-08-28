@@ -62,8 +62,8 @@ export default function KamusTab({ isPremium = false }: { isPremium?: boolean })
           <div className="inline-flex items-center justify-center p-3 bg-blue-100 text-blue-600 rounded-2xl mb-4">
             <Book size={32} />
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 mb-2">Kamus Arab-Indonesia</h1>
-          <p className="text-slate-500">Cari kosakata untuk memperkaya perbendaharaan kata Anda.</p>
+          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 mb-2">Kamus Arab-Indonesia</h1>
+          <p className="text-slate-500 dark:text-slate-400">Cari kosakata untuk memperkaya perbendaharaan kata Anda.</p>
         </div>
 
         {/* Search Bar */}
@@ -73,7 +73,7 @@ export default function KamusTab({ isPremium = false }: { isPremium?: boolean })
           </div>
           <input
             type="text"
-            className="block w-full pl-11 pr-4 py-4 bg-white border-2 border-slate-200 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all text-lg font-medium shadow-sm"
+            className="block w-full pl-11 pr-4 py-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-50 dark:border-blue-9000 focus:ring-4 focus:ring-blue-500/20 transition-all text-lg font-medium shadow-sm"
             placeholder="Ketik kata dalam bahasa Indonesia (Cth: rumah, buku, laptop...)"
             value={searchQuery}
             onChange={(e) => {
@@ -95,19 +95,19 @@ export default function KamusTab({ isPremium = false }: { isPremium?: boolean })
           {hasSearched && (result || aiResult) && (() => {
             const displayResult = result || aiResult;
             return (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white rounded-3xl p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-slate-100 text-center relative overflow-hidden">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-slate-100 dark:border-slate-800 text-center relative overflow-hidden">
               {aiResult && (
-                <div className="absolute top-4 right-4 flex items-center gap-1 text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded-md">
+                <div className="absolute top-4 right-4 flex items-center gap-1 text-xs font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-950 px-2 py-1 rounded-md">
                   <Sparkles size={12} /> AI Translated
                 </div>
               )}
-              <div className="inline-block px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
+              <div className="inline-block px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
                 {displayResult?.type}
               </div>
               <h2 className="text-6xl font-bold text-blue-600 mb-4" dir="rtl">
                 {displayResult?.arabic}
               </h2>
-              <p className="text-2xl font-medium text-slate-700 mb-2">
+              <p className="text-2xl font-medium text-slate-700 dark:text-slate-300 mb-2">
                 "{query}"
               </p>
               <p className="text-slate-400 font-mono text-lg">
@@ -118,14 +118,14 @@ export default function KamusTab({ isPremium = false }: { isPremium?: boolean })
           })()}
           
           {false && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white rounded-3xl p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-slate-100 text-center">
-              <div className="inline-block px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-slate-100 dark:border-slate-800 text-center">
+              <div className="inline-block px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
                 {result.type}
               </div>
               <h2 className="text-6xl font-bold text-blue-600 mb-4" dir="rtl">
                 {result.arabic}
               </h2>
-              <p className="text-2xl font-medium text-slate-700 mb-2">
+              <p className="text-2xl font-medium text-slate-700 dark:text-slate-300 mb-2">
                 "{query}"
               </p>
               <p className="text-slate-400 font-mono text-lg">
@@ -141,13 +141,13 @@ export default function KamusTab({ isPremium = false }: { isPremium?: boolean })
               </div>
               
               <div className="relative z-10">
-                <div className="inline-flex items-center justify-center p-3 bg-white text-indigo-500 rounded-xl shadow-sm mb-4">
+                <div className="inline-flex items-center justify-center p-3 bg-white dark:bg-slate-900 text-indigo-500 rounded-xl shadow-sm mb-4">
                   <Sparkles size={24} />
                 </div>
-                <h3 className="text-xl font-bold text-slate-800 mb-2">
+                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">
                   Kata "{query}" tidak ditemukan di database kamus.
                 </h3>
-                <p className="text-slate-600 mb-8 max-w-md mx-auto">
+                <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-md mx-auto">
                   Gunakan AI cerdas kami untuk menerjemahkan konteks kata ini secara akurat.
                 </p>
                 
