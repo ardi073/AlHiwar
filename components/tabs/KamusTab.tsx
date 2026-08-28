@@ -1,6 +1,6 @@
 "use client";
 import { useState } from 'react';
-import { Search, Book, Star, Sparkles } from 'lucide-react';
+import { Search, Book, Star, Sparkles, Loader2 } from 'lucide-react';
 
 // Mock Dictionary Data
 const mockDictionary: Record<string, { arabic: string; transliteration: string; type: string }> = {
@@ -16,11 +16,40 @@ const mockDictionary: Record<string, { arabic: string; transliteration: string; 
 export default function KamusTab({ isPremium = false }: { isPremium?: boolean }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
+  const [isAiTranslating, setIsAiTranslating] = useState(false);
+  const [aiResult, setAiResult] = useState<{ arabic: string; transliteration: string; type: string } | null>(null);
   
   const query = searchQuery.toLowerCase().trim();
   // Using exact match for simplicity in this mock
   const result = mockDictionary[query];
-  const isNotFound = hasSearched && !result && query.length > 0;
+  const isNotFound = hasSearched && !result && !aiResult && query.length > 0;
+
+  const handleAiTranslate = async () => {
+    if (!isPremium) {
+      alert('Upgrade ke Premium untuk menggunakan AI Translate!');
+      return;
+    }
+    
+    setIsAiTranslating(true);
+    setAiResult(null);
+    
+    try {
+      const response = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: query })
+      });
+      
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error?.message || 'Gagal menerjemahkan');
+      
+      setAiResult(data);
+    } catch (err: any) {
+      alert(err.message || 'Terjadi kesalahan saat memproses terjemahan AI.');
+    } finally {
+      setIsAiTranslating(false);
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +79,7 @@ export default function KamusTab({ isPremium = false }: { isPremium?: boolean })
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setHasSearched(false);
+              setAiResult(null);
             }}
           />
           <button 
@@ -62,7 +92,32 @@ export default function KamusTab({ isPremium = false }: { isPremium?: boolean })
 
         {/* Results Area */}
         <div className="max-w-2xl mx-auto">
-          {hasSearched && result && (
+          {hasSearched && (result || aiResult) && (() => {
+            const displayResult = result || aiResult;
+            return (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white rounded-3xl p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-slate-100 text-center relative overflow-hidden">
+              {aiResult && (
+                <div className="absolute top-4 right-4 flex items-center gap-1 text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded-md">
+                  <Sparkles size={12} /> AI Translated
+                </div>
+              )}
+              <div className="inline-block px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
+                {displayResult?.type}
+              </div>
+              <h2 className="text-6xl font-bold text-blue-600 mb-4" dir="rtl">
+                {displayResult?.arabic}
+              </h2>
+              <p className="text-2xl font-medium text-slate-700 mb-2">
+                "{query}"
+              </p>
+              <p className="text-slate-400 font-mono text-lg">
+                / {displayResult?.transliteration} /
+              </p>
+            </div>
+            );
+          })()}
+          
+          {false && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white rounded-3xl p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-slate-100 text-center">
               <div className="inline-block px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
                 {result.type}
@@ -97,7 +152,8 @@ export default function KamusTab({ isPremium = false }: { isPremium?: boolean })
                 </p>
                 
                 <button 
-                  onClick={() => isPremium ? alert('AI Translate sedang memproses... (Simulasi)') : alert('Upgrade ke Premium untuk menggunakan AI Translate!')}
+                  onClick={handleAiTranslate}
+                  disabled={isAiTranslating}
                   className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-blue-500/30 transition-all hover:scale-105"
                 >
                   <Sparkles size={18} />
