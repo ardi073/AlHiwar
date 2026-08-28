@@ -139,11 +139,6 @@ export default function KuisTab({ isPremium = false }: { isPremium?: boolean }) 
                 <h2 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-slate-200 text-center leading-relaxed">
                   {currentQ.question}
                 </h2>
-                {currentQ.arabic && (
-                  <p className="text-3xl font-serif text-slate-700 dark:text-slate-300 text-center" dir="rtl">
-                    {currentQ.arabic}
-                  </p>
-                )}
               </div>
 
               {/* Options */}
