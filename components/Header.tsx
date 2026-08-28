@@ -2,12 +2,14 @@
 import { BookOpen, Home, MessageCircle, Bot, Brain, Library, PenTool, Moon, LogOut } from 'lucide-react';
 
 interface HeaderProps {
+  isPremium?: boolean;
+  onLogout?: () => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   progressPercent: number;
 }
 
-export default function Header({ activeTab, setActiveTab, progressPercent }: HeaderProps) {
+export default function Header({ activeTab, setActiveTab, progressPercent, isPremium, onLogout }: HeaderProps) {
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: <Home size={20} /> },
     { id: 'percakapan', label: 'Percakapan', icon: <MessageCircle size={20} /> },
@@ -51,6 +53,15 @@ export default function Header({ activeTab, setActiveTab, progressPercent }: Hea
           <button className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 text-slate-500 hover:bg-slate-100 transition-colors">
             <Moon size={20} />
           </button>
+          {isPremium && (
+            <button 
+              onClick={onLogout}
+              title="Keluar (Logout)"
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
+            >
+              <LogOut size={20} />
+            </button>
+          )}
         </div>
       </header>
 

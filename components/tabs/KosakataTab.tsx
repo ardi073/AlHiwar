@@ -29,6 +29,7 @@ export default function KosakataTab({ isPremium = false }: { isPremium?: boolean
   const currentVocab = vocabList[currentIndex];
 
   const checkPremiumAccess = (id: string) => {
+    if (isPremium) return true;
     const freeThemes = ['taaruf', 'matham', 'madrasah'];
     return freeThemes.includes(id); 
   };

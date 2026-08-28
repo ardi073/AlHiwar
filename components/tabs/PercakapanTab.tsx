@@ -25,6 +25,7 @@ export default function PercakapanTab({ isPremium = false }: { isPremium?: boole
   const activeTheme = themes.find(t => t.id === activeThemeId);
 
   const checkPremiumAccess = (id: string) => {
+    if (isPremium) return true;
     const freeThemes = ['taaruf', 'matham', 'madrasah'];
     return freeThemes.includes(id); 
   };

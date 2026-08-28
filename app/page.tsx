@@ -27,7 +27,12 @@ export default function AppContainer() {
       <Header 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
-        progressPercent={progressPercent} 
+        progressPercent={progressPercent}
+        isPremium={isPremium}
+        onLogout={() => {
+          setIsPremium(false);
+          setShowLoginModal(true);
+        }}
       />
       
       <main className="flex-1 w-full relative flex flex-col overflow-hidden">
