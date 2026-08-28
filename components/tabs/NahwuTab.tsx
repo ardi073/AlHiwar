@@ -24,6 +24,7 @@ export default function NahwuTab({ isPremium = false }: { isPremium?: boolean })
   const activeChapter = chapters.find(c => c.id === activeChapterId);
 
   const checkPremiumAccess = (idx: number) => {
+    if (isPremium) return true;
     return idx < 2; // First 2 chapters are free
   };
 

@@ -101,7 +101,7 @@ export default function KamusTab({ isPremium = false }: { isPremium?: boolean })
                   className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-blue-500/30 transition-all hover:scale-105"
                 >
                   <Sparkles size={18} />
-                  Gunakan Terjemahan AI (Premium)
+                  {isPremium ? 'Gunakan Terjemahan AI' : 'Gunakan Terjemahan AI (Premium)'}
                 </button>
               </div>
             </div>
