@@ -5,35 +5,31 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { userText, aiScenario, aiChatHistory, aiModel } = body;
     
-    // System Prompt safely hidden in the backend
-    const systemPrompt = `Anda adalah "Ustadz Al-Hiwar", seorang tutor belajar bahasa Arab-Indonesia yang sangat ramah. 
-Tugas Anda adalah membalas pesan pengguna dalam bentuk percakapan sehari-hari.
-Aturan respon Anda:
-1. Tulis balasan Anda dalam 1 atau 2 kalimat pendek berbahasa Arab dengan Harakat lengkap yang benar.
-2. Di baris baru setelah bahasa Arab, berikan cara bacanya (transliterasi Latin) tanpa tanda kurung.
-3. Di baris baru setelah transliterasi, tulis arti terjemahannya dalam Bahasa Indonesia tanpa tanda kurung.
-4. Jika pengguna melakukan kesalahan penulisan atau tata bahasa Arab, berikan koreksi atau masukan ramah di bagian paling bawah.
-5. Pertahankan alur percakapan dengan menanyakan pertanyaan sederhana terkait topik skenario: ${aiScenario || 'general'}.
-
-(Pastikan setiap bagian Arab, Latin, dan Indo dipisah dengan newline/enter tanpa prefix teks tambahan seperti "Arab:" atau "Latin:").`;
+    const systemPrompt = "Anda adalah \"Ustadz Al-Hiwar\", seorang tutor belajar bahasa Arab-Indonesia yang sangat ramah.\n" +
+"Tugas Anda adalah membalas pesan pengguna dalam bentuk percakapan sehari-hari.\n" +
+"SANGAT PENTING: Anda HANYA boleh merespons dalam format JSON murni. Jangan tambahkan teks apa pun di luar JSON, jangan gunakan blok markdown.\n" +
+"Format JSON yang diwajibkan:\n" +
+"{\n" +
+"  \"ar\": \"Balasan Anda dalam 1 atau 2 kalimat pendek berbahasa Arab dengan Harakat lengkap yang benar\",\n" +
+"  \"latin\": \"Cara bacanya (transliterasi Latin) huruf kecil\",\n" +
+"  \"id\": \"Arti terjemahannya dalam Bahasa Indonesia. Jika pengguna melakukan kesalahan, berikan koreksi ramah di sini. Selalu akhiri dengan pertanyaan sederhana untuk melanjutkan topik skenario: " + (aiScenario || 'general') + "\",\n" +
+"}";
 
     const contents = [];
     
-    // Map previous chat history to Gemini format
     if (aiChatHistory && Array.isArray(aiChatHistory) && aiChatHistory.length > 0) {
-      const historyToSend = aiChatHistory.slice(-8); // Keep last 4 interactions
+      const historyToSend = aiChatHistory.slice(-8);
       historyToSend.forEach(msg => {
         contents.push({
           role: msg.sender === 'user' ? 'user' : 'model',
-          parts: [{ text: msg.sender === 'user' ? msg.ar : (msg.ar + "\n" + msg.latin + "\n" + msg.id) }]
+          parts: [{ text: msg.sender === 'user' ? msg.ar : JSON.stringify({ ar: msg.ar, latin: msg.latin, id: msg.id }) }]
         });
       });
     }
 
-    // Append the current user instruction
     contents.push({
       role: "user",
-      parts: [{ text: `System instruction: ${systemPrompt}\n\nUser input: ${userText}` }]
+      parts: [{ text: "System instruction: " + systemPrompt + "\n\nUser input: " + userText }]
     });
 
     const apiKey = process.env.GEMINI_API_KEY || '';
@@ -47,11 +43,22 @@ Aturan respon Anda:
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: contents })
+      body: JSON.stringify({ 
+        contents: contents,
+        generationConfig: {
+          responseMimeType: "application/json"
+        }
+      })
     });
 
     const data = await response.json();
-    return NextResponse.json(data, { status: response.status });
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'Gagal menghubungi Gemini API');
+    }
+    
+    // Return the raw response back to frontend (which now contains JSON)
+    return NextResponse.json(data, { status: 200 });
 
   } catch (error: any) {
     return NextResponse.json({ error: { message: error.message } }, { status: 500 });

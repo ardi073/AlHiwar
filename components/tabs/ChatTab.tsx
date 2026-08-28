@@ -62,18 +62,24 @@ export default function ChatTab({ isPremium = false }: { isPremium?: boolean }) 
 
       if (data.candidates && data.candidates[0].content.parts[0].text) {
         const rawText = data.candidates[0].content.parts[0].text.trim();
-        const lines = rawText.split('\\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0);
-        
-        const ar = lines[0] || '';
-        const latin = lines[1] || '';
-        const id = lines.slice(2).join('\\n') || '';
-
-        setChatHistory(prev => [...prev, {
-          sender: 'ai',
-          ar: ar,
-          latin: latin,
-          id: id
-        }]);
+          try {
+            const cleanJsonStr = rawText.replace(/\x60\x60\x60json/g, '').replace(/\x60\x60\x60/g, '').trim();
+            const parsed = JSON.parse(cleanJsonStr);
+            setChatHistory(prev => [...prev, {
+              sender: 'ai',
+              ar: parsed.ar || '',
+              latin: parsed.latin || '',
+              id: parsed.id || ''
+            }]);
+          } catch(e) {
+            console.error("Failed to parse AI JSON:", rawText);
+            setChatHistory(prev => [...prev, {
+              sender: 'ai',
+              ar: '',
+              latin: '',
+              id: 'Maaf, respons AI gagal dimuat dengan benar.'
+            }]);
+          }
       }
     } catch (err: any) {
       console.error(err);
@@ -205,14 +211,14 @@ export default function ChatTab({ isPremium = false }: { isPremium?: boolean }) 
                       {isAi ? 'Ustadz Al-Hiwar' : 'Anda'}
                     </div>
                     <div className={`relative group rounded-3xl p-6 shadow-sm border ${isAi ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-tl-none' : 'bg-blue-50 dark:bg-blue-950 border-blue-100 rounded-tr-none'}`}>
-                      <p className={`font-serif text-3xl leading-relaxed text-right text-slate-800 dark:text-slate-200 ${isAi ? 'mb-4' : ''}`} dir="rtl">
-                        {msg.ar}
-                      </p>
-                      
-                      {isAi && (
-                        <>
-                          <p className="font-medium mb-1 text-slate-600 dark:text-slate-400">{msg.latin}</p>
-                          <p className="text-sm text-slate-500 dark:text-slate-400">{msg.id}</p>
+                      {isAi ? (
+                          <>
+                            <p className="font-serif text-3xl leading-relaxed text-right text-slate-800 dark:text-slate-200 mb-4" dir="rtl">
+                              {msg.ar}
+                            </p>
+                            <p className="font-medium mb-1 text-slate-600 dark:text-slate-400">{msg.latin}</p>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">{msg.id}</p>
+
                           <div className="absolute -bottom-4 right-6 flex gap-2">
                             <button
                               title="Dengar (Arab)"
@@ -228,9 +234,11 @@ export default function ChatTab({ isPremium = false }: { isPremium?: boolean }) 
                             >
                               ID
                             </button>
-                          </div>
-                        </>
-                      )}
+                            </div>
+                          </>
+                        ) : (
+                          <p className="text-base font-medium text-slate-800 dark:text-slate-200">{msg.ar}</p>
+                        )}
                     </div>
                   </div>
                 </div>
