@@ -14,8 +14,9 @@ export async function POST(req: Request) {
 "SANGAT PENTING: Anda hanya boleh merespons HANYA dengan format JSON yang kaku dan valid. Tidak boleh ada teks tambahan, penjelasan, atau blok markdown.\n" +
 "Format JSON yang diwajibkan:\n" +
 "{\n" +
-"  \"arabic\": \"kata terjemahan dalam teks Arab asli (dengan harakat lengkap)\",\n" +
-"  \"transliteration\": \"cara baca latin dari kata Arab tersebut huruf kecil\",\n" +
+"  \"arabic\": \"Teks Arab asli (dengan harakat lengkap)\",\n" +
+"  \"indonesian\": \"Makna atau terjemahan dalam bahasa Indonesia\",\n" +
+"  \"transliteration\": \"Cara baca teks Arab tersebut dalam huruf latin\",\n" +
 "  \"type\": \"Jenis kata dalam bahasa Inggris (Noun, Verb, Adjective, Preposition, dll)\"\n" +
 "}\n\n" +
 "Pastikan transliterasi latin sesuai kaidah penulisan yang umum dipakai di Indonesia.";

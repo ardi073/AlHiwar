@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Search, Book, Star, Sparkles, Loader2 } from 'lucide-react';
 
 // Mock Dictionary Data
-const mockDictionary: Record<string, { arabic: string; transliteration: string; type: string }> = {
+const mockDictionary: Record<string, { arabic: string; indonesian?: string; transliteration: string; type: string }> = {
   'buku': { arabic: 'كِتَاب', transliteration: 'kitaab', type: 'Noun' },
   'makan': { arabic: 'أَكَلَ', transliteration: 'akala', type: 'Verb' },
   'rumah': { arabic: 'بَيْت', transliteration: 'bayt', type: 'Noun' },
@@ -17,7 +17,7 @@ export default function KamusTab({ isPremium = false }: { isPremium?: boolean })
   const [searchQuery, setSearchQuery] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
   const [isAiTranslating, setIsAiTranslating] = useState(false);
-  const [aiResult, setAiResult] = useState<{ arabic: string; transliteration: string; type: string } | null>(null);
+  const [aiResult, setAiResult] = useState<{ arabic: string; indonesian: string; transliteration: string; type: string } | null>(null);
   
   const query = searchQuery.toLowerCase().trim();
   // Using exact match for simplicity in this mock
@@ -74,7 +74,7 @@ export default function KamusTab({ isPremium = false }: { isPremium?: boolean })
           <input
             type="text"
             className="block w-full pl-11 pr-4 py-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-50 dark:border-blue-9000 focus:ring-4 focus:ring-blue-500/20 transition-all text-lg font-medium shadow-sm"
-            placeholder="Ketik kata dalam bahasa Indonesia (Cth: rumah, buku, laptop...)"
+            placeholder="Ketik kata dalam bahasa Indonesia atau Arab (Cth: rumah, كتاب...)"
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -108,7 +108,7 @@ export default function KamusTab({ isPremium = false }: { isPremium?: boolean })
                 {displayResult?.arabic}
               </h2>
               <p className="text-2xl font-medium text-slate-700 dark:text-slate-300 mb-2">
-                "{query}"
+                "{displayResult?.indonesian || query}"
               </p>
               <p className="text-slate-400 font-mono text-lg">
                 / {displayResult?.transliteration} /
