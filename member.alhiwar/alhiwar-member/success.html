@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pembayaran Berhasil - Al-Hiwar Premium</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Outfit', sans-serif; background: #f3f4f6; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .success-icon-container {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #d1fae5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            transform: scale(0);
+        }
+        .success-icon {
+            font-size: 40px;
+            color: #10b981;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="glass-panel max-w-md w-full rounded-3xl p-8 text-center">
+        
+        <div class="success-icon-container">
+            <i class='bx bx-check success-icon'></i>
+        </div>
+
+        <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Ahlan Wasahlan!</h1>
+        
+        <p class="text-gray-600 mb-6 leading-relaxed">
+            Pembayaran Anda telah <strong class="text-teal-600">berhasil</strong> diproses.<br>
+            Selamat, akun Anda kini telah ditingkatkan menjadi Premium.
+        </p>
+
+        <div class="bg-gray-50 rounded-2xl p-4 mb-8 text-sm text-gray-500 border border-gray-100">
+            <p>Silakan buka Aplikasi Al-Hiwar di HP Anda, atau klik tombol di bawah ini untuk mulai belajar.</p>
+        </div>
+
+        <a href="register.html" class="block w-full bg-teal-500 text-white font-bold py-4 px-4 rounded-2xl hover:bg-teal-600 transition-all shadow-lg shadow-teal-500/30">
+            Mulai Belajar Sekarang <i class='bx bx-right-arrow-alt align-middle ml-1'></i>
+        </a>
+        
+    </div>
+
+</body>
+</html>
