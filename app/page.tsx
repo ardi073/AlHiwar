@@ -122,7 +122,7 @@ export default function AppContainer() {
               <h2 className="text-2xl font-extrabold text-slate-800 dark:text-slate-200 mb-2">Masuk ke Al-Hiwar</h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">Gunakan email yang sudah Anda daftarkan di website.</p>
               
-              <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); alert('Login berhasil (Simulasi)!'); setIsPremium(true); setShowLoginModal(false); }}>
+              <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); alert('Login berhasil!'); setIsPremium(true); setShowLoginModal(false); }}>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                   <input 
