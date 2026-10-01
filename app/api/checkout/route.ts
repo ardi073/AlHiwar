@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     }
 
     // 1. (Opsional) Buat user di Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    let { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -21,11 +21,23 @@ export async function POST(request: Request) {
       }
     });
 
-    if (authError) {
+    let userId = authData?.user?.id;
+
+    // Jika user mungkin sudah ada (Supabase mengembalikan identities kosong untuk email yang sudah terdaftar demi keamanan)
+    if (authData?.user && authData.user.identities && authData.user.identities.length === 0) {
+      // Coba login untuk mendapatkan ID asli user tersebut
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (signInError) {
+        return NextResponse.json({ error: 'Email ini sudah terdaftar. Silakan gunakan email lain atau masukkan kata sandi yang benar untuk akun ini.' }, { status: 400 });
+      }
+      userId = signInData.user?.id;
+    } else if (authError) {
       return NextResponse.json({ error: authError.message }, { status: 400 });
     }
-
-    const userId = authData.user?.id;
 
     // 2. Simpan transaksi/langganan ke database (tabel 'subscriptions')
     const { error: dbError } = await supabase
