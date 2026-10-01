@@ -76,7 +76,7 @@ export async function POST(request: Request) {
         <p>Salam hangat,<br>Tim AlHiwar</p>
       </div>
     `;
-    await sendEmail(email, 'Pendaftaran Member Premium - Menunggu Pembayaran', userEmailHtml);
+    const emailResult = await sendEmail(email, 'Pendaftaran Member Premium - Menunggu Pembayaran', userEmailHtml);
 
     // 4. Kirim Email Notifikasi ke Developer/Admin
     const adminEmail = process.env.DEVELOPER_EMAIL || process.env.EMAIL_USER || '';
@@ -97,7 +97,11 @@ export async function POST(request: Request) {
       await sendEmail(adminEmail, 'Verifikasi Pembayaran Member Baru - AlHiwar', adminEmailHtml);
     }
 
-    return NextResponse.json({ success: true, message: 'Pendaftaran berhasil, silakan cek email Anda untuk instruksi pembayaran.' });
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Pendaftaran berhasil, silakan cek email Anda untuk instruksi pembayaran.',
+      emailError: emailResult.success ? null : emailResult.error
+    });
   } catch (error: any) {
     console.error('Checkout error:', error);
     return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });

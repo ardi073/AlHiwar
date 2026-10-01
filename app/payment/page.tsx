@@ -35,6 +35,9 @@ export default function PaymentPage() {
       const result = await response.json();
       
       if (response.ok) {
+        if (result.emailError) {
+          alert('Berhasil daftar, TAPI email gagal terkirim (Silakan info ke admin log ini): ' + result.emailError);
+        }
         setSuccess(true);
       } else {
         alert('Gagal mendaftar: ' + result.error);
