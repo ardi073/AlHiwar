@@ -48,27 +48,62 @@ export default function PaymentPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-6 text-white">
-        <div className="max-w-md w-full bg-neutral-900 border border-neutral-800 rounded-3xl p-8 text-center space-y-6 shadow-2xl">
+      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center p-6 text-white overflow-y-auto py-12">
+        <div className="max-w-md w-full bg-neutral-900 border border-neutral-800 rounded-3xl p-8 text-center space-y-6 shadow-2xl mt-10">
           <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-10 h-10 text-emerald-500" />
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-white">Pendaftaran Berhasil!</h2>
           <p className="text-neutral-400">
-            Terima kasih telah mendaftar, <strong>{formData.name}</strong>. Silakan cek email Anda ({formData.email}) untuk instruksi pembayaran lebih lanjut.
+            Terima kasih, <strong>{formData.name}</strong>. Silakan selesaikan pembayaran Anda untuk mengaktifkan fitur premium. Instruksi juga telah dikirim ke email Anda.
           </p>
-          <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
-            <p className="text-sm text-neutral-300">
-              Metode Pembayaran: <strong className="text-white">{formData.paymentMethod}</strong><br/>
-              Total: <strong className="text-emerald-400">Rp 37.000</strong>
-            </p>
+          <div className="bg-neutral-800/50 p-6 rounded-xl border border-neutral-700/50 text-left space-y-4">
+            <div className="flex justify-between items-center border-b border-neutral-700 pb-3">
+              <span className="text-neutral-400">Metode:</span>
+              <strong className="text-white">{formData.paymentMethod}</strong>
+            </div>
+            <div className="flex justify-between items-center border-b border-neutral-700 pb-3">
+              <span className="text-neutral-400">Total Pembayaran:</span>
+              <strong className="text-emerald-400 text-xl">Rp 37.000</strong>
+            </div>
+            
+            {formData.paymentMethod === 'Bank Transfer' ? (
+              <div className="pt-2 text-center">
+                <p className="text-sm text-neutral-400 mb-2">Transfer ke Rekening Bank BCA:</p>
+                <div className="bg-neutral-950 p-4 rounded-lg border border-neutral-800 flex items-center justify-center gap-3">
+                  <CreditCard className="text-emerald-500 w-6 h-6" />
+                  <span className="text-2xl font-mono tracking-wider text-white">1234567890</span>
+                </div>
+                <p className="text-sm text-neutral-400 mt-2">A.n. AlHiwar (Ardiansyah)</p>
+              </div>
+            ) : (
+              <div className="pt-2 text-center flex flex-col items-center">
+                <p className="text-sm text-neutral-400 mb-3">Scan QRIS di bawah ini:</p>
+                <div className="bg-white p-2 rounded-xl inline-block">
+                  {/* Ganti src dengan link gambar QRIS asli Anda nantinya */}
+                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=qris_alhiwar" alt="QRIS AlHiwar" className="w-40 h-40" />
+                </div>
+                <p className="text-xs text-neutral-500 mt-3">*Gunakan aplikasi m-Banking atau E-Wallet (OVO, GoPay, DANA, dll)</p>
+              </div>
+            )}
           </div>
-          <button 
-            onClick={() => window.location.href = '/'}
-            className="w-full py-3.5 bg-white text-black font-semibold rounded-xl hover:bg-neutral-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.2)]"
-          >
-            Kembali ke Beranda
-          </button>
+          
+          <div className="space-y-3 pt-2">
+            <a 
+              href={`https://wa.me/6281234567890?text=Halo%20Admin%20AlHiwar,%20saya%20sudah%20transfer%20pembayaran%20member%20premium%20atas%20nama%20${encodeURIComponent(formData.name)}%20(${encodeURIComponent(formData.email)}).%20Ini%20bukti%20transfernya:`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-4 bg-emerald-500 text-black font-bold rounded-xl hover:bg-emerald-400 transition-colors shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center"
+            >
+              Konfirmasi via WhatsApp
+            </a>
+            <button 
+              onClick={() => window.location.href = '/'}
+              className="w-full py-3.5 bg-transparent border border-neutral-700 text-neutral-300 font-semibold rounded-xl hover:bg-neutral-800 transition-colors"
+            >
+              Nanti Saja (Kembali ke Beranda)
+            </button>
+          </div>
         </div>
       </div>
     );

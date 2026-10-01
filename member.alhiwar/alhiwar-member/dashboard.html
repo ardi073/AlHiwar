@@ -12,8 +12,7 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    <!-- Midtrans Snap.js (Sandbox) -->
-    <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="GANTI_DENGAN_SANDBOX_CLIENT_KEY_ANDA"></script>
+    <!-- Pembayaran dialihkan ke sistem manual di alhiwar.click -->
     
     <style>
         body { font-family: 'Outfit', sans-serif; background: #f3f4f6; }
@@ -187,58 +186,15 @@
             window.location.href = 'index.html';
         }
 
-        // --- SISTEM PEMBAYARAN MIDTRANS ---
+        // --- SISTEM PEMBAYARAN MANUAL ---
         document.getElementById('pay-button').addEventListener('click', function() {
             var btn = document.getElementById('pay-button');
             var originalText = btn.innerHTML;
-            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin mr-2 text-xl'></i> Memproses...";
+            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin mr-2 text-xl'></i> Mengalihkan...";
             btn.disabled = true;
 
-            fetch('/api/midtrans-token', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: currentUser.id,
-                    email: currentUser.email
-                })
-            })
-            .then(function(response) {
-                return response.json().then(function(data) {
-                    return { response: response, data: data };
-                });
-            })
-            .then(function(result) {
-                var response = result.response;
-                var data = result.data;
-
-                if (!response.ok) {
-                    throw new Error(data.error || "Gagal membuat transaksi");
-                }
-
-                // Munculkan Pop-up Pembayaran Midtrans Snap
-                window.snap.pay(data.token, {
-                    onSuccess: function(result){
-                        window.location.href = "success.html";
-                    },
-                    onPending: function(result){
-                        alert("Menunggu pembayaran Anda!");
-                    },
-                    onError: function(result){
-                        alert("Pembayaran gagal!");
-                    },
-                    onClose: function(){
-                        alert("Anda menutup halaman pembayaran sebelum menyelesaikannya.");
-                    }
-                });
-            })
-            .catch(function(err) {
-                console.error(err);
-                alert("Error: " + err.message);
-            })
-            .finally(function() {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
+            // Alihkan pengguna ke halaman checkout Next.js untuk pembayaran manual
+            window.location.href = "https://alhiwar.click/payment";
         });
 
         // Jalankan saat pertama kali dibuka
