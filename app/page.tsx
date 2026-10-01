@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
 import { Flame, CheckCircle, Star, Bot, Lock, Mail, Info } from 'lucide-react';
 import dynamic from 'next/dynamic';
@@ -17,11 +18,60 @@ export default function AppContainer() {
   const [isPremium, setIsPremium] = useState(false);
   const [progressPercent, setProgressPercent] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // This could read from localStorage to sync progress across reloads
+    // Check active session on load
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setShowLoginModal(false);
+        checkSubscription(session.user.id);
+      }
+    };
+    checkSession();
     setProgressPercent(10);
   }, []);
+
+  const checkSubscription = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('status')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .single();
+    
+    if (data) {
+      setIsPremium(true);
+    } else {
+      setIsPremium(false);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: loginPassword,
+      });
+
+      if (error) {
+        alert('Login gagal: ' + error.message);
+      } else if (data.user) {
+        alert('Login berhasil!');
+        setShowLoginModal(false);
+        await checkSubscription(data.user.id);
+      }
+    } catch (err: any) {
+      alert('Terjadi kesalahan sistem.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className={isDarkMode ? "dark" : ""}>
@@ -122,12 +172,14 @@ export default function AppContainer() {
               <h2 className="text-2xl font-extrabold text-slate-800 dark:text-slate-200 mb-2">Masuk ke Al-Hiwar</h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">Gunakan email yang sudah Anda daftarkan di website.</p>
               
-              <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); alert('Login berhasil!'); setIsPremium(true); setShowLoginModal(false); }}>
+              <form className="flex flex-col gap-4" onSubmit={handleLogin}>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                   <input 
                     type="email" 
                     required 
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
                     placeholder="Email Anda" 
                     className="w-full py-3.5 pl-12 pr-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium text-slate-700 dark:text-slate-300"
                   />
@@ -138,6 +190,8 @@ export default function AppContainer() {
                   <input 
                     type="password" 
                     required 
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
                     placeholder="Kata Sandi" 
                     className="w-full py-3.5 pl-12 pr-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium text-slate-700 dark:text-slate-300"
                   />
@@ -145,9 +199,10 @@ export default function AppContainer() {
                 
                 <button 
                   type="submit" 
-                  className="w-full py-4 mt-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-emerald-600/20"
+                  disabled={isLoading}
+                  className="w-full py-4 mt-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-base transition-colors shadow-md shadow-emerald-600/20 disabled:opacity-70"
                 >
-                  Masuk Sekarang
+                  {isLoading ? 'Memproses...' : 'Masuk Sekarang'}
                 </button>
                 
                 <button 

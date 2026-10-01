@@ -16,7 +16,8 @@
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- Pembayaran manual via alhiwar.click -->
+    <!-- Midtrans Snap.js (Sandbox) -->
+    
     
     <style>
         body { font-family: 'Outfit', sans-serif; background: #f3f4f6; }
@@ -149,60 +150,9 @@
             });
         }
 
-        // --- SISTEM PEMBAYARAN MIDTRANS ---
+        // --- SISTEM PEMBAYARAN MANUAL ---
         document.getElementById('pay-button').addEventListener('click', function() {
-            const btn = document.getElementById('pay-button');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin mr-2 text-xl'></i> Memproses...";
-            btn.disabled = true;
-
-            fetch('/api/midtrans-token', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: currentUser.id,
-                    email: currentUser.email
-                })
-            })
-            .then(function(response) {
-                return response.json().then(function(data) {
-                    return { response: response, data: data };
-                });
-            })
-            .then(function(result) {
-                const response = result.response;
-                const data = result.data;
-
-                if (!response.ok) {
-                    throw new Error(data.error || "Gagal membuat transaksi");
-                }
-
-                // Munculkan Pop-up Pembayaran Midtrans Snap
-                window.snap.pay(data.token, {
-                    onSuccess: function(result){
-                        alert("Pembayaran berhasil!");
-                        // Reload halaman untuk cek status baru
-                        window.location.reload();
-                    },
-                    onPending: function(result){
-                        alert("Menunggu pembayaran Anda!");
-                    },
-                    onError: function(result){
-                        alert("Pembayaran gagal!");
-                    },
-                    onClose: function(){
-                        alert("Anda menutup halaman pembayaran sebelum menyelesaikannya.");
-                    }
-                });
-            })
-            .catch(function(err) {
-                console.error(err);
-                alert("Error: " + err.message);
-            })
-            .finally(function() {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
+            window.location.href = "https://alhiwar.click/payment";
         });
 
         // Jalankan saat pertama kali dibuka

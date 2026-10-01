@@ -12,7 +12,8 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    <!-- Pembayaran dialihkan ke sistem manual di alhiwar.click -->
+    <!-- Midtrans Snap.js (Sandbox) -->
+    
     
     <style>
         body { font-family: 'Outfit', sans-serif; background: #f3f4f6; }
@@ -188,12 +189,6 @@
 
         // --- SISTEM PEMBAYARAN MANUAL ---
         document.getElementById('pay-button').addEventListener('click', function() {
-            var btn = document.getElementById('pay-button');
-            var originalText = btn.innerHTML;
-            btn.innerHTML = "<i class='bx bx-loader-alt bx-spin mr-2 text-xl'></i> Mengalihkan...";
-            btn.disabled = true;
-
-            // Alihkan pengguna ke halaman checkout Next.js untuk pembayaran manual
             window.location.href = "https://alhiwar.click/payment";
         });
 
