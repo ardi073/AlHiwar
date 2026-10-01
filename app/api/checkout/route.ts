@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
     if (dbError) {
       console.error('DB Error:', dbError);
-      return NextResponse.json({ error: 'Gagal menyimpan data langganan' }, { status: 500 });
+      return NextResponse.json({ error: `Gagal menyimpan data langganan: ${dbError.message}` }, { status: 500 });
     }
 
     // 3. Kirim Email Notifikasi ke User
