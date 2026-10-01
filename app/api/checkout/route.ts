@@ -4,7 +4,10 @@ import { sendEmail } from '@/lib/email';
 
 export async function POST(request: Request) {
   try {
-    const { email, name, password, paymentMethod } = await request.json();
+    let { email, name, password, paymentMethod } = await request.json();
+    
+    // Hilangkan spasi berlebih di awal/akhir email
+    if (email) email = email.trim();
 
     if (!email || !name || !password || !paymentMethod) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
