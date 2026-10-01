@@ -56,8 +56,8 @@ export async function POST(request: Request) {
         <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
           <h4 style="margin-top: 0;">Instruksi Pembayaran:</h4>
           ${paymentMethod === 'Bank Transfer' 
-            ? '<p>Transfer ke Rekening BCA: <strong>1234567890</strong> a.n AlHiwar</p>' 
-            : '<p>Silakan scan QRIS pada halaman pembayaran atau hubungi admin untuk mendapatkan QRIS.</p>'
+            ? '<p>Transfer ke Rekening <strong>BCA</strong>: <strong>5465341944</strong> a.n <strong>Ardiansyah</strong></p>' 
+            : '<p>Silakan scan kode QRIS berikut untuk melakukan pembayaran:</p><br><img src="https://alhiwar.click/qris.jpg" alt="QRIS AlHiwar" style="max-width:100%; height:auto; max-height:350px; border-radius:10px;" />'
           }
         </div>
         <p>Tim kami akan memverifikasi pembayaran Anda maksimal 1x24 jam.</p>

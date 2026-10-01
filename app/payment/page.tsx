@@ -58,10 +58,23 @@ export default function PaymentPage() {
             Terima kasih telah mendaftar, <strong>{formData.name}</strong>. Silakan cek email Anda ({formData.email}) untuk instruksi pembayaran lebih lanjut.
           </p>
           <div className="bg-neutral-800/50 p-4 rounded-xl border border-neutral-700/50">
-            <p className="text-sm text-neutral-300">
+            <div className="text-sm text-neutral-300 mb-4">
               Metode Pembayaran: <strong className="text-white">{formData.paymentMethod}</strong><br/>
               Total: <strong className="text-emerald-400">Rp 37.000</strong>
-            </p>
+            </div>
+            
+            {formData.paymentMethod === 'Bank Transfer' ? (
+              <div className="bg-neutral-900 border border-neutral-700 p-4 rounded-lg mt-4">
+                <p className="text-neutral-400 text-sm mb-1">Transfer ke Rekening BCA</p>
+                <p className="text-2xl font-bold text-white tracking-widest">5465341944</p>
+                <p className="text-emerald-400 font-semibold mt-1">a.n Ardiansyah</p>
+              </div>
+            ) : (
+              <div className="bg-white p-4 rounded-lg mt-4 mx-auto max-w-[250px]">
+                <img src="/qris.jpg" alt="QRIS AlHiwar" className="w-full h-auto rounded-md" />
+                <p className="text-center text-black font-bold text-sm mt-2">Scan untuk Membayar</p>
+              </div>
+            )}
           </div>
           <button 
             onClick={() => window.location.href = '/'}
