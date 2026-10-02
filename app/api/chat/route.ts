@@ -15,49 +15,51 @@ export async function POST(req: Request) {
 "  \"id\": \"Arti terjemahannya dalam Bahasa Indonesia. Jika pengguna melakukan kesalahan, berikan koreksi ramah di sini. Selalu akhiri dengan pertanyaan sederhana untuk melanjutkan topik skenario: " + (aiScenario || 'general') + "\",\n" +
 "}";
 
-    const contents = [];
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
     
+    const apiKey = process.env.GEMINI_API_KEY || '';
+    if (!apiKey) {
+      return NextResponse.json({ error: { message: 'API Key Backend Belum Dikonfigurasi (GEMINI_API_KEY)' } }, { status: 500 });
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const modelToUse = aiModel || 'gemini-1.5-flash';
+    
+    const model = genAI.getGenerativeModel({
+      model: modelToUse,
+      systemInstruction: systemPrompt,
+      generationConfig: {
+        responseMimeType: "application/json",
+      }
+    });
+
+    const history = [];
     if (aiChatHistory && Array.isArray(aiChatHistory) && aiChatHistory.length > 0) {
       const historyToSend = aiChatHistory.slice(-8);
       historyToSend.forEach(msg => {
-        contents.push({
+        history.push({
           role: msg.sender === 'user' ? 'user' : 'model',
           parts: [{ text: msg.sender === 'user' ? msg.ar : JSON.stringify({ ar: msg.ar, latin: msg.latin, id: msg.id }) }]
         });
       });
     }
 
-    contents.push({
-      role: "user",
-      parts: [{ text: "System instruction: " + systemPrompt + "\n\nUser input: " + userText }]
+    const chat = model.startChat({
+      history: history,
     });
 
-    const apiKey = process.env.GEMINI_API_KEY || '';
-    if (!apiKey) {
-      return NextResponse.json({ error: { message: 'API Key Backend Belum Dikonfigurasi (GEMINI_API_KEY)' } }, { status: 500 });
-    }
-
-    const modelToUse = aiModel || 'gemini-1.5-flash-latest';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        contents: contents,
-        generationConfig: {
-          responseMimeType: "application/json"
-        }
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error?.message || 'Gagal menghubungi Gemini API');
-    }
+    const result = await chat.sendMessage(userText);
+    const responseText = result.response.text();
     
-    // Return the raw response back to frontend (which now contains JSON)
+    const data = {
+      candidates: [
+        {
+          content: {
+            parts: [{ text: responseText }]
+          }
+        }
+      ]
+    };
     return NextResponse.json(data, { status: 200 });
 
   } catch (error: any) {

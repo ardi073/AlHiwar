@@ -21,39 +21,26 @@ export async function POST(req: Request) {
 "}\n\n" +
 "Pastikan transliterasi latin sesuai kaidah penulisan yang umum dipakai di Indonesia.";
 
-    const contents = [
-      {
-        role: "user",
-        parts: [{ text: "System instruction: " + systemPrompt + "\n\nUser input: " + text }]
-      }
-    ];
-
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
+    
     const apiKey = process.env.GEMINI_API_KEY || '';
     if (!apiKey) {
       return NextResponse.json({ error: { message: 'API Key Backend Belum Dikonfigurasi (GEMINI_API_KEY)' } }, { status: 500 });
     }
 
-    const modelToUse = aiModel || 'gemini-1.5-flash-latest';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: contents,
-        generationConfig: {
-          responseMimeType: "application/json"
-        }
-      })
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const modelToUse = aiModel || 'gemini-1.5-flash';
+    
+    const model = genAI.getGenerativeModel({
+      model: modelToUse,
+      systemInstruction: systemPrompt,
+      generationConfig: {
+        responseMimeType: "application/json",
+      }
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error?.message || 'Gagal menghubungi Gemini API');
-    }
-
-    const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const result = await model.generateContent(text);
+    const aiText = result.response.text();
     
     try {
       const cleanJsonStr = aiText.replace(/\x60\x60\x60json/g, '').replace(/\x60\x60\x60/g, '').trim();
