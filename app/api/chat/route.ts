@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const modelToUse = aiModel || 'gemini-2.0-flash';
+    const modelToUse = aiModel || 'gemini-3.8-flash';
     
     const model = genAI.getGenerativeModel({
       model: modelToUse,
@@ -42,6 +42,11 @@ export async function POST(req: Request) {
           parts: [{ text: msg.sender === 'user' ? msg.ar : JSON.stringify({ ar: msg.ar, latin: msg.latin, id: msg.id }) }]
         });
       });
+      
+      // Google Generative AI SDK requires the first message in history to be from 'user'
+      if (history.length > 0 && history[0].role === 'model') {
+        history.shift(); // Remove the first 'model' message if it's at the beginning
+      }
     }
 
     const chat = model.startChat({
