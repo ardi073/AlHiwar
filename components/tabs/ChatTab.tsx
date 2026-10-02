@@ -50,7 +50,7 @@ export default function ChatTab({ isPremium = false }: { isPremium?: boolean }) 
           userText: text,
           aiScenario: selectedScenario,
           aiChatHistory: chatHistory,
-          aiModel: 'gemini-1.5-flash'
+          aiModel: 'gemini-1.5-flash-latest'
         })
       });
 
