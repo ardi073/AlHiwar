@@ -33,10 +33,10 @@ export async function POST(req: Request) {
       }
     });
 
-    const history = [];
+    const history: any[] = [];
     if (aiChatHistory && Array.isArray(aiChatHistory) && aiChatHistory.length > 0) {
       const historyToSend = aiChatHistory.slice(-8);
-      historyToSend.forEach(msg => {
+      historyToSend.forEach((msg: any) => {
         history.push({
           role: msg.sender === 'user' ? 'user' : 'model',
           parts: [{ text: msg.sender === 'user' ? msg.ar : JSON.stringify({ ar: msg.ar, latin: msg.latin, id: msg.id }) }]
