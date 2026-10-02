@@ -75,7 +75,10 @@ export async function POST(request: Request) {
             : '<p>Silakan scan kode QRIS berikut untuk melakukan pembayaran:</p><br><img src="https://alhiwar.click/qris.jpg" alt="QRIS AlHiwar" style="max-width:100%; height:auto; max-height:350px; border-radius:10px;" />'
           }
         </div>
-        <p>Tim kami akan memverifikasi pembayaran Anda maksimal 1x24 jam.</p>
+        <div style="background-color: #eef2ff; border: 1px solid #c7d2fe; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; color: #3730a3; line-height: 1.5;"><strong>PENTING:</strong><br>Setelah melakukan transfer, harap kirimkan foto/struk bukti transfer Anda ke WhatsApp Admin di <strong><a href="https://wa.me/6281219721101" style="color: #4f46e5; text-decoration: none; font-weight: bold;">081219721101</a></strong> atau Anda juga bisa langsung membalas (Reply) email ini dengan melampirkan bukti transfer.</p>
+        </div>
+        <p>Tim kami akan memverifikasi pembayaran Anda dan mengaktifkan status Premium maksimal 1x24 jam.</p>
         <p>Salam hangat,<br>Tim AlHiwar</p>
       </div>
     `;
