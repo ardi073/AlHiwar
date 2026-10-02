@@ -83,7 +83,8 @@ export default function AppContainer() {
         setActiveTab={setActiveTab} 
         progressPercent={progressPercent}
         isPremium={isPremium}
-        onLogout={() => {
+        onLogout={async () => {
+          await supabase.auth.signOut();
           setIsPremium(false);
           setShowLoginModal(true);
         }}

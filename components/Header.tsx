@@ -55,15 +55,13 @@ export default function Header({ activeTab, setActiveTab, progressPercent, isPre
           <button onClick={toggleDarkMode} className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
             {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
-          {isPremium && (
-            <button 
-              onClick={onLogout}
-              title="Keluar (Logout)"
-              className="w-10 h-10 rounded-full flex items-center justify-center bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
-            >
-              <LogOut size={20} />
-            </button>
-          )}
+          <button 
+            onClick={onLogout}
+            title="Keluar (Logout)"
+            className="w-10 h-10 rounded-full flex items-center justify-center bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
+          >
+            <LogOut size={20} />
+          </button>
         </div>
       </header>
 
