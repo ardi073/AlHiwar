@@ -73,6 +73,29 @@ export default function AppContainer() {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!loginEmail) {
+      alert('Silakan ketik email Anda terlebih dahulu di kolom email di atas, lalu klik Lupa Password.');
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(loginEmail, {
+        redirectTo: window.location.origin + '/reset-password',
+      });
+      if (error) {
+        alert('Gagal mengirim link reset password: ' + error.message);
+      } else {
+        alert('Link reset password telah dikirim ke email Anda! Silakan cek kotak masuk (inbox) atau folder spam.');
+      }
+    } catch (err) {
+      alert('Terjadi kesalahan sistem saat mengirim link.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className={isDarkMode ? "dark" : ""}>
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col font-sans overflow-hidden">
@@ -196,6 +219,16 @@ export default function AppContainer() {
                     placeholder="Kata Sandi" 
                     className="w-full py-3.5 pl-12 pr-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all font-medium text-slate-700 dark:text-slate-300"
                   />
+                </div>
+                
+                <div className="flex justify-end mt-[-8px]">
+                  <button 
+                    type="button" 
+                    onClick={handleResetPassword}
+                    className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+                  >
+                    Lupa Password?
+                  </button>
                 </div>
                 
                 <button 
