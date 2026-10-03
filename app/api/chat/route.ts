@@ -68,6 +68,49 @@ export async function POST(req: Request) {
     return NextResponse.json(data, { status: 200 });
 
   } catch (error: any) {
+    // FALLBACK: Coba gunakan Groq (Llama 3) jika Gemini error/down
+    try {
+      const groqApiKey = process.env.GROQ_API_KEY;
+      if (groqApiKey) {
+        const Groq = require('groq-sdk');
+        const groq = new Groq({ apiKey: groqApiKey });
+        
+        const groqMessages: any[] = [
+          { role: 'system', content: systemPrompt }
+        ];
+        
+        if (aiChatHistory && Array.isArray(aiChatHistory)) {
+           aiChatHistory.slice(-8).forEach((msg: any) => {
+             groqMessages.push({
+               role: msg.sender === 'user' ? 'user' : 'assistant',
+               content: msg.sender === 'user' ? msg.ar : JSON.stringify({ ar: msg.ar, latin: msg.latin, id: msg.id })
+             });
+           });
+        }
+        groqMessages.push({ role: 'user', content: userText });
+        
+        const chatCompletion = await groq.chat.completions.create({
+          messages: groqMessages,
+          model: 'llama3-8b-8192',
+          response_format: { type: 'json_object' }
+        });
+        
+        const responseText = chatCompletion.choices[0]?.message?.content || "";
+        const data = {
+          candidates: [
+            {
+              content: {
+                parts: [{ text: responseText }]
+              }
+            }
+          ]
+        };
+        return NextResponse.json(data, { status: 200 });
+      }
+    } catch (groqError: any) {
+      console.error('Groq fallback failed:', groqError);
+    }
+
     return NextResponse.json({ error: { message: error.message } }, { status: 500 });
   }
 }
