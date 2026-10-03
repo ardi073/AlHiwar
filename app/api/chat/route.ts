@@ -79,19 +79,9 @@ export async function POST(req: Request) {
           }
           groqMessages.push({ role: 'user', content: userText });
           
-          // Ambil daftar model yang aktif secara otomatis
-          const modelsResponse = await groq.models.list();
-          const activeModels = modelsResponse.data.map((m: any) => m.id);
-          // Cari model llama 3.1 8b, jika tidak ada cari llama 3 8b, jika tidak ada cari sembarang llama, jika tidak ada pakai model pertama
-          const dynamicModel = activeModels.find((id: string) => id.includes('llama-3.1-8b'))
-            || activeModels.find((id: string) => id.includes('llama3-8b'))
-            || activeModels.find((id: string) => id.includes('llama'))
-            || activeModels[0];
-          
           const chatCompletion = await groq.chat.completions.create({
             messages: groqMessages,
-            model: dynamicModel,
-            response_format: { type: 'json_object' }
+            model: 'llama-3.1-8b-instant',
           });
           
           responseText = chatCompletion.choices[0]?.message?.content || "";

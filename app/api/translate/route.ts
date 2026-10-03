@@ -59,21 +59,12 @@ export async function POST(req: Request) {
           const Groq = require('groq-sdk');
           const groq = new Groq({ apiKey: groqApiKey });
           
-          // Ambil daftar model yang aktif secara otomatis
-          const modelsResponse = await groq.models.list();
-          const activeModels = modelsResponse.data.map((m: any) => m.id);
-          const dynamicModel = activeModels.find((id: string) => id.includes('llama-3.1-8b'))
-            || activeModels.find((id: string) => id.includes('llama3-8b'))
-            || activeModels.find((id: string) => id.includes('llama'))
-            || activeModels[0];
-          
           const chatCompletion = await groq.chat.completions.create({
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: text }
             ],
-            model: dynamicModel,
-            response_format: { type: 'json_object' }
+            model: 'llama-3.1-8b-instant',
           });
           
           const aiText = chatCompletion.choices[0]?.message?.content || "";
