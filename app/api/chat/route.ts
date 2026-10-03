@@ -79,9 +79,24 @@ export async function POST(req: Request) {
           }
           groqMessages.push({ role: 'user', content: userText });
           
+          // Ambil daftar model secara dinamis khusus untuk API Key ini
+          const modelsResponse = await groq.models.list();
+          const activeModels = modelsResponse.data.map((m: any) => m.id);
+          
+          // Singkirkan model khusus yang bukan chatbot (seperti penjaga/guard, suara, alat)
+          const textModels = activeModels.filter((id: string) => !id.includes('guard') && !id.includes('whisper') && !id.includes('tool') && !id.includes('vision'));
+          
+          // Pilih model terbaik yang tersedia (prioritas dari atas ke bawah)
+          const dynamicModel = textModels.find((id: string) => id.includes('llama-3.1-8b'))
+            || textModels.find((id: string) => id.includes('llama-3.3'))
+            || textModels.find((id: string) => id.includes('llama'))
+            || textModels.find((id: string) => id.includes('mixtral'))
+            || textModels.find((id: string) => id.includes('gemma'))
+            || textModels[0];
+
           const chatCompletion = await groq.chat.completions.create({
             messages: groqMessages,
-            model: 'llama-3.1-8b-instant',
+            model: dynamicModel || 'llama-3.1-8b-instant', // fallback akhir
           });
           
           responseText = chatCompletion.choices[0]?.message?.content || "";
