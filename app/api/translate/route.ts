@@ -39,55 +39,48 @@ export async function POST(req: Request) {
       }
     });
 
-    const result = await model.generateContent(text);
-    const aiText = result.response.text();
-    
     try {
-      const cleanJsonStr = aiText.replace(/\x60\x60\x60json/g, '').replace(/\x60\x60\x60/g, '').trim();
-      const resultObj = JSON.parse(cleanJsonStr);
-      return NextResponse.json(resultObj, { status: 200 });
-    } catch (parseError) {
-      console.error("Gagal parse JSON dari Gemini:", aiText);
-      return NextResponse.json({ error: { message: 'Respons AI tidak valid formatnya' } }, { status: 500 });
-    }
-
-  } catch (error: any) {
-    // FALLBACK: Coba gunakan Groq jika Gemini error
-    try {
-      const groqApiKey = process.env.GROQ_API_KEY;
-      if (groqApiKey) {
-        const Groq = require('groq-sdk');
-        const groq = new Groq({ apiKey: groqApiKey });
-        
-        const systemPrompt = "Anda adalah asisten penerjemah bahasa Indonesia ke bahasa Arab (atau sebaliknya).\n" +
-"Jika pengguna memberikan kata/kalimat bahasa Indonesia, terjemahkan ke bahasa Arab.\n" +
-"Jika pengguna memberikan bahasa Arab, terjemahkan ke bahasa Indonesia.\n" +
-"Respons HANYA boleh dalam format JSON berikut:\n" +
-"{\n" +
-"  \"ar\": \"Teks bahasa Arab dengan Harakat lengkap\",\n" +
-"  \"latin\": \"Cara bacanya (huruf kecil)\",\n" +
-"  \"id\": \"Arti dalam bahasa Indonesia\",\n" +
-"  \"note\": \"Penjelasan singkat (opsional)\"\n" +
-"}";
-        
-        const chatCompletion = await groq.chat.completions.create({
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: text }
-          ],
-          model: 'llama3-8b-8192',
-          response_format: { type: 'json_object' }
-        });
-        
-        const aiText = chatCompletion.choices[0]?.message?.content || "";
+      const result = await model.generateContent(text);
+      const aiText = result.response.text();
+      
+      try {
         const cleanJsonStr = aiText.replace(/\x60\x60\x60json/g, '').replace(/\x60\x60\x60/g, '').trim();
         const resultObj = JSON.parse(cleanJsonStr);
         return NextResponse.json(resultObj, { status: 200 });
+      } catch (parseError) {
+        console.error("Gagal parse JSON dari Gemini:", aiText);
+        return NextResponse.json({ error: { message: 'Respons AI tidak valid formatnya' } }, { status: 500 });
       }
-    } catch (groqError: any) {
-      console.error('Groq fallback failed:', groqError);
+    } catch (geminiError: any) {
+      // FALLBACK: Coba gunakan Groq jika Gemini error
+      try {
+        const groqApiKey = process.env.GROQ_API_KEY;
+        if (groqApiKey) {
+          const Groq = require('groq-sdk');
+          const groq = new Groq({ apiKey: groqApiKey });
+          
+          const chatCompletion = await groq.chat.completions.create({
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: text }
+            ],
+            model: 'llama3-8b-8192',
+            response_format: { type: 'json_object' }
+          });
+          
+          const aiText = chatCompletion.choices[0]?.message?.content || "";
+          const cleanJsonStr = aiText.replace(/\x60\x60\x60json/g, '').replace(/\x60\x60\x60/g, '').trim();
+          const resultObj = JSON.parse(cleanJsonStr);
+          return NextResponse.json(resultObj, { status: 200 });
+        }
+      } catch (groqError: any) {
+        console.error('Groq fallback failed:', groqError);
+      }
+  
+      return NextResponse.json({ error: { message: geminiError.message } }, { status: 500 });
     }
 
+  } catch (error: any) {
     return NextResponse.json({ error: { message: error.message } }, { status: 500 });
   }
 }
