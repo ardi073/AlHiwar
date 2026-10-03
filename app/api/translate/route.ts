@@ -75,9 +75,10 @@ export async function POST(req: Request) {
         }
       } catch (groqError: any) {
         console.error('Groq fallback failed:', groqError);
+        return NextResponse.json({ error: { message: "[Fallback Gagal] Groq Error: " + groqError.message } }, { status: 500 });
       }
-  
-      return NextResponse.json({ error: { message: geminiError.message } }, { status: 500 });
+      
+      return NextResponse.json({ error: { message: "[Groq API Key Belum Ada] Gemini Error: " + geminiError.message } }, { status: 500 });
     }
 
   } catch (error: any) {
